@@ -1,5 +1,8 @@
 
+# these are overridden when make is called from ../Makefile
 OPAMLIB 	= $(HOME)/.opam/system/lib
+LIBGCC 		= /usr/lib/gcc/x86_64-linux-gnu/5/libgcc.a  
+
 FLAGS  		= -cflag -g -lflags -g,-linkpkg,-dontlink,unix
 BUILD  		= ocamlbuild -use-ocamlfind $(FLAGS)
 
@@ -7,10 +10,7 @@ BUILD  		= ocamlbuild -use-ocamlfind $(FLAGS)
 
 all:: build
 
-main.native:
-		$(BUILD) main.native
-
-main.native.o:
+main.native.o: 
 		$(BUILD) main.native.o
 
 build:: main.native.o
@@ -29,8 +29,8 @@ build:: main.native.o
 			-T$(OPAMLIB)/minios-xen/libminios.lds \
 			-m elf_x86_64 \
 			-l x86_64 \
-			/usr/lib/gcc/x86_64-linux-gnu/5/libgcc.a \
-			-o mir-suspend.xen
+			$(LIBGCC) \
+			-o test-vm.xen
 
 clean::
 		ocamlbuild -clean
