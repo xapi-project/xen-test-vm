@@ -16,8 +16,8 @@ calling `make` will build `src/test-vm.xen`
         ./setup.sh # executes opam installations
         make
 
-A `Dockerfile` can be used to create an environment for compiling the VM. It
-is no well tested so far.
+A `Dockerfile` can be used to create a Docker container environment for
+compiling the VM. It is not well tested so far.
 
 # Installing the VM
 
