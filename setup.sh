@@ -8,6 +8,6 @@ opam pin add -n minios-xen git://github.com/jonludlam/mini-os#suspend-resume3
 
 
 opam install mirage-xen
-opem install mirage-console
-opem install mirage-bootvar-xen
-opem install mirage
+opam install mirage-console
+opam install mirage-bootvar-xen
+opam install mirage
