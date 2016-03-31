@@ -11,6 +11,9 @@ all:		src
 install: 	all
 		scp src/test-vm.xen $(HOST)
 
+remove: 	
+		true
+
 clean:
 		$(MAKE) -C src clean
 

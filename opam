@@ -16,13 +16,9 @@ remove: [make "PREFIX=%{prefix}%" "remove"]
 available: [ ocaml-version >= "4.02.3" ]
 
 depends: [
-  "mirage-types-lwt"
-  "mirage-types" {>= "2.6.0"}
-  "ipaddr"       {>= "2.6.0"}
-  "functoria"
-  "astring"
-  "mirage-xen-minios"
-  "mirage-console"
-  "mirage-bootvar-xen"
+    "mirage-xen"
+    "mirage-console"
+    "mirage-bootvar-xen"
+    "mirage"
 ]
 
