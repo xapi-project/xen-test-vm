@@ -1,10 +1,8 @@
 # vim:ft=make ts=8: 
 #
 
-# these are overridden when make is called from ../Makefile
-OPAMLIB	= $(HOME)/.opam/system/lib
-LIBGCC	= /usr/lib/gcc/x86_64-linux-gnu/5/libgcc.a  
-
+OPAMLIB = $(shell ocamlfind printconf path)
+LIBGCC 	= $(shell gcc -print-libgcc-file-name) 
 VM 	= test-vm.xen
 
 # packages are listed in _tags

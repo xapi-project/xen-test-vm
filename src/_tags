@@ -1,9 +1,10 @@
 true:	        package(functoria.runtime)
 true:	        package(mirage-bootvar)
 true:	        package(mirage-console.xen)
-true:	        package(mirage-types.lwt)
-true:	        package(mirage-xen)
-true:	        package(mirage.runtime)
+
+# true:	        package(mirage-types.lwt)
+# true:	        package(mirage-xen)
+# true:	        package(mirage.runtime)
 
 <*.ml>:         warn(A-4-41-44), debug, bin_annot
 <*.ml>:         strict_sequence, principal, safe_string

@@ -2,16 +2,17 @@
 #
 #
 
-OPAMLIB 	= $(HOME)/.opam/system/lib
-LIBGCC 		= $(shell gcc -print-libgcc-file-name) 
 HOST 		= root@dt88:/boot/guest
 
-all:	src
-	$(MAKE) OPAMLIB="$(OPAMLIB)" LIBGCC="$(LIBGCC)" -C src/ all
+all:		src
+		$(MAKE) -C src/ all
 
 
 install: 	all
 		scp src/test-vm.xen $(HOST)
+
+clean:
+		$(MAKE) -C src clean
 
 release: 	opam descr
 

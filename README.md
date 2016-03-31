@@ -13,18 +13,8 @@ now, this requires to install the dependencies manually. Apart from that,
 calling `make` will build `src/test-vm.xen`
 
 
-    opam install mirage-types-lwt functoria astring mirage-console
-    opam install mirage-xen-minios # do we need this?
-  
-    opam add pin mirage-platform git://github.com/jonludlam/mirage-platform/tree/reenable-suspend-resume
-
-    opam pin add mirage-xen git://github.com/jonludlam/mirage-platform#reenable-suspend-resume
-
-    opam pin add mirage-bootvar-xen git://github.com/jonludlam/mirage-bootvar-xen#better-parser
-
-    opam pin add minios-xen git://github.com/jonludlam/mini-os#suspend-resume3
-
-    make
+        ./setup.sh # executes opam installations
+        make
 
 
 # Installing the VM
