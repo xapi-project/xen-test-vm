@@ -5,38 +5,38 @@ OPAMLIB = $(shell ocamlfind printconf path)
 LIBGCC 	= $(shell gcc -print-libgcc-file-name) 
 VM 	= test-vm.xen
 
-# packages are listed in _tags
-FLAGS  	= -cflag -g -lflags -g,-linkpkg,-dontlink,unix
-BUILD  	= ocamlbuild -use-ocamlfind $(FLAGS)
+# packages and flags are listed in _tags
+OCBOPTS = -cflag -g -lflags -g,-linkpkg,-dontlink,unix
+OCB  	= ocamlbuild -use-ocamlfind $(OCBOPTS)
 
 .PHONY: all depend clean build main.native
 
-all:: 	build
+all: 	build
 
-main.native.o: 
-	$(BUILD) main.native.o
+_build/main.native.o: 
+	$(OCB) main.native.o
 
-build:: main.native.o
-	ld -d -static -nostdlib \
-		_build/main.native.o \
-		-L$(OPAMLIB) \
-		-L$(OPAMLIB)/minios-xen \
-		-L$(OPAMLIB)/io-page \
-		$(OPAMLIB)/mirage-xen/libxencamlbindings.a \
-		$(OPAMLIB)/mirage-xen-ocaml/libxenasmrun.a \
-		$(OPAMLIB)/mirage-xen-ocaml/libxenotherlibs.a \
-		$(OPAMLIB)/mirage-xen-posix/libxenposix.a \
-		-lio_page_xen_stubs \
-		-lopenlibm \
-		-lminios \
-		-T$(OPAMLIB)/minios-xen/libminios.lds \
-		-m elf_x86_64 \
-		-l x86_64 \
-		$(LIBGCC) \
-		-o $(VM)
+LIBS +=	_build/main.native.o 
+LIBS +=	-L$(OPAMLIB) 
+LIBS +=	-L$(OPAMLIB)/minios-xen 
+LIBS +=	-L$(OPAMLIB)/io-page 
+LIBS +=	$(OPAMLIB)/mirage-xen/libxencamlbindings.a 
+LIBS +=	$(OPAMLIB)/mirage-xen-ocaml/libxenasmrun.a 
+LIBS +=	$(OPAMLIB)/mirage-xen-ocaml/libxenotherlibs.a 
+LIBS +=	$(OPAMLIB)/mirage-xen-posix/libxenposix.a 
+LIBS +=	-lio_page_xen_stubs 
+LIBS +=	-lopenlibm 
+LIBS +=	-lminios 
+LIBS +=	-T$(OPAMLIB)/minios-xen/libminios.lds 
+LIBS +=	-m elf_x86_64 
+LIBS +=	-l x86_64 
+LIBS +=	$(LIBGCC) 
 
-clean::
-		ocamlbuild -clean
-		rm -f $(VM)
+build:  _build/main.native.o
+	ld -d -static -nostdlib $(LIBS) -o $(VM)
+
+clean:
+	ocamlbuild -clean
+	rm -f $(VM)
 
 
