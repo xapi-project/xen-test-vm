@@ -11,10 +11,9 @@ OCB  	= ocamlbuild -use-ocamlfind $(OCBOPTS)
 
 .PHONY: all depend clean build main.native
 
-all: 	build
-
-_build/main.native.o: 
+all: 	
 	$(OCB) main.native.o
+	ld -d -static -nostdlib $(LIBS) -o $(VM)
 
 LIBS +=	_build/main.native.o 
 LIBS +=	-L$(OPAMLIB) 
@@ -32,8 +31,6 @@ LIBS +=	-m elf_x86_64
 LIBS +=	-l x86_64 
 LIBS +=	$(LIBGCC) 
 
-build:  _build/main.native.o
-	ld -d -static -nostdlib $(LIBS) -o $(VM)
 
 clean:
 	ocamlbuild -clean
