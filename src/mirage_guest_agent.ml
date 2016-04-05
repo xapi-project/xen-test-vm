@@ -2,6 +2,9 @@
 module Main (C: V1_LWT.CONSOLE) = struct
   open Lwt
 
+  (* These are like [C.log] and [C.log_s] but accept printf-style
+   * formatting instructions.
+   *)
   let log   c fmt = Printf.kprintf (fun msg -> C.log   c msg) fmt 
   let log_s c fmt = Printf.kprintf (fun msg -> C.log_s c msg) fmt
 
