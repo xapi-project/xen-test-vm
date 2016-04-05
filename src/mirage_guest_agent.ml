@@ -2,26 +2,29 @@
 module Main (C: V1_LWT.CONSOLE) = struct
   open Lwt
 
+  let log   c fmt = Printf.kprintf (fun msg -> C.log   c msg) fmt 
+  let log_s c fmt = Printf.kprintf (fun msg -> C.log_s c msg) fmt
+
   let suspend c =
     OS.Sched.suspend () >>= fun cancelled -> 
-    C.log c (Printf.sprintf "cancelled=%d" cancelled);
+    log c "cancelled=%d" cancelled;
     return cancelled
 
   let start c = 
-    C.log_s c (Printf.sprintf "xs_watch ()") >>= fun () -> 
+    log_s c "xs_watch ()" >>= fun () -> 
     OS.Xs.make () >>= fun client -> 
     let rec inner () = 
       OS.Xs.(immediate client (fun h -> directory h "control")) >>= fun dir -> 
       begin if List.mem "shutdown" dir then begin
           OS.Xs.(immediate client (fun h -> read h "control/shutdown")) >>= fun msg ->
-          C.log_s c (Printf.sprintf "Got control message: %s" msg) >>= fun () ->
+          log_s c "Got control message: %s" msg >>= fun () ->
           match msg with
           | "suspend" -> 
             OS.Xs.(immediate client (fun h -> rm h "control/shutdown")) >>= fun _ -> 
             suspend c >>= fun _ -> 
-            C.log_s c "About to read domid" >>= fun _ ->
+            log_s c "About to read domid" >>= fun _ ->
             OS.Xs.(immediate client (fun h -> read h "domid")) >>= fun domid -> 
-            C.log_s c (Printf.sprintf "We're back: domid=%s" domid) >>= fun _ -> 
+            log_s c "We're back: domid=%s" domid >>= fun _ -> 
             return true
           | "poweroff" -> 
             OS.Sched.shutdown OS.Sched.Poweroff;
