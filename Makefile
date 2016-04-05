@@ -3,7 +3,7 @@
 #
 
 
-HOST 		= root@dt87 		
+HOST 		= "root@dt87"
 
 all:		src
 		$(MAKE) -C src/ all
