@@ -10,10 +10,16 @@ module Main (C: V1_LWT.CONSOLE) = struct
     log c "cancelled=%d" cancelled;
     return cancelled
 
+    (* Documentation 
+     * http://mirage.github.io/mirage-xen/#Xs
+     * http://mirage.github.io/mirage-xen/#Sched
+     * http://mirage.github.io/mirage-types/#V1:CONSOLE
+     *)
+
   let start c = 
     log_s c "xs_watch ()" >>= fun () -> 
     OS.Xs.make () >>= fun client -> 
-    let rec inner () = 
+    let rec loop () = 
       OS.Xs.(immediate client (fun h -> directory h "control")) >>= fun dir -> 
       begin if List.mem "shutdown" dir then begin
           OS.Xs.(immediate client (fun h -> read h "control/shutdown")) >>= fun msg ->
@@ -42,7 +48,7 @@ module Main (C: V1_LWT.CONSOLE) = struct
             return false
         end else return false end >>= fun _ ->
       OS.Time.sleep 1.0 >>= fun _ ->
-      inner ()
-    in inner ()
+      loop ()
+    in loop ()
 
 end
