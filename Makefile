@@ -2,14 +2,16 @@
 #
 #
 
-HOST 		= root@dt88:/boot/guest
+
+HOST 		= root@dt87 		
 
 all:		src
 		$(MAKE) -C src/ all
 
-
+		# This target is specific to Citrix
 install: 	all
-		scp src/test-vm.xen $(HOST)
+		ssh $(HOST) "test -d /boot/guest || mkdir /boot/guest"
+		scp src/test-vm.xen $(HOST):/boot/guest
 
 remove: 	
 		true
