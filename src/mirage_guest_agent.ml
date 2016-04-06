@@ -1,3 +1,13 @@
+(* This code implements a minimal kernel that responds to
+ * lifecycle events.
+ *)
+
+(* Documentation of important interfaces:
+ * http://mirage.github.io/mirage-xen/#Xs
+ * http://mirage.github.io/mirage-xen/#Sched
+ * http://mirage.github.io/mirage-types/#V1:CONSOLE
+ *)
+
 
 module Main (C: V1_LWT.CONSOLE) = struct
   open Lwt
@@ -8,7 +18,10 @@ module Main (C: V1_LWT.CONSOLE) = struct
   let log   c fmt = Printf.kprintf (fun msg -> C.log   c msg) fmt 
   let log_s c fmt = Printf.kprintf (fun msg -> C.log_s c msg) fmt
 
-  (* implementation of control operations *)
+
+  (* The suspend operation acknowledges the request by removing 
+   * "control/shutdown" from Xen Store.
+   *)
   let suspend client c =
     OS.Xs.(immediate client (fun h -> rm h "control/shutdown")) >>= fun _ -> 
     OS.Sched.suspend () >>= fun cancelled -> 
@@ -25,29 +38,23 @@ module Main (C: V1_LWT.CONSOLE) = struct
   let halt ()       = OS.Sched.(shutdown Poweroff); return false
   let crash ()      = OS.Sched.(shutdown Crash);    return false
 
-    (* Documentation 
-     * http://mirage.github.io/mirage-xen/#Xs
-     * http://mirage.github.io/mirage-xen/#Sched
-     * http://mirage.github.io/mirage-types/#V1:CONSOLE
-     *)
-
   (* event loop *)  
   let start c = 
     OS.Xs.make () >>= fun client -> 
+    OS.Xs.(immediate client (fun h -> read h "domid")) >>= fun domid -> 
+    log_s c "domid=%s" domid >>= fun () ->
     let rec loop () = 
       OS.Xs.(immediate client (fun h -> directory h "control")) >>= fun dir -> 
       begin if List.mem "shutdown" dir then 
         OS.Xs.(immediate client (fun h -> read h "control/shutdown")) >>= fun msg ->
         log_s c "Got control message: %s" msg >>= fun () ->
-        sleep 5.0 >>= fun _ ->
-        ( match msg with
+        match msg with
         | "suspend"   -> suspend client c
         | "poweroff"  -> poweroff ()
         | "reboot"    -> reboot ()
         | "halt"      -> halt ()
         | "crash"     -> crash ()
         | _           -> return false
-        )
       else 
         return false 
       end >>= fun _ ->
@@ -55,5 +62,4 @@ module Main (C: V1_LWT.CONSOLE) = struct
       loop ()
     in 
       loop ()
-
 end
