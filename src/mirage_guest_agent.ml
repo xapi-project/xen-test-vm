@@ -18,10 +18,12 @@ module Main (C: V1_LWT.CONSOLE) = struct
     log_s c "We're back: domid=%s" domid >>= fun _ -> 
     return true
 
-  let poweroff ()   = OS.Sched.shutdown OS.Sched.Poweroff; return false 
-  let reboot ()     = OS.Sched.shutdown OS.Sched.Reboot;   return false 
-  let halt ()       = OS.Sched.shutdown OS.Sched.Poweroff; return false
-  let crash ()      = OS.Sched.shutdown OS.Sched.Crash;    return false
+  let sleep secs    = return (OS.Time.sleep secs)
+
+  let poweroff ()   = OS.Sched.(shutdown Poweroff); return false 
+  let reboot ()     = OS.Sched.(shutdown Reboot);   return false 
+  let halt ()       = OS.Sched.(shutdown Poweroff); return false
+  let crash ()      = OS.Sched.(shutdown Crash);    return false
 
     (* Documentation 
      * http://mirage.github.io/mirage-xen/#Xs
@@ -34,11 +36,10 @@ module Main (C: V1_LWT.CONSOLE) = struct
     OS.Xs.make () >>= fun client -> 
     let rec loop () = 
       OS.Xs.(immediate client (fun h -> directory h "control")) >>= fun dir -> 
-      if not @@ List.mem "shutdown" dir then 
-        return false 
-      else begin
+      begin if List.mem "shutdown" dir then 
         OS.Xs.(immediate client (fun h -> read h "control/shutdown")) >>= fun msg ->
         log_s c "Got control message: %s" msg >>= fun () ->
+        sleep 5.0 >>= fun _ ->
         ( match msg with
         | "suspend"   -> suspend client c
         | "poweroff"  -> poweroff ()
@@ -47,8 +48,10 @@ module Main (C: V1_LWT.CONSOLE) = struct
         | "crash"     -> crash ()
         | _           -> return false
         )
+      else 
+        return false 
       end >>= fun _ ->
-      OS.Time.sleep 1.0 >>= fun _ ->
+      sleep 1.0 >>= fun _ ->
       loop ()
     in 
       loop ()
