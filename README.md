@@ -35,4 +35,12 @@ As root on $HOST:
     
 Once installed, use the CLI on the host to operate the VM or XenCenter.
 
+# Debugging
+
+To direct console output of the VM to a file, you can tell the $HOST:
+
+    xenstore write /local/logconsole/@ "/tmp/console.%d"
+
+Output then goes to `/tmp/console.<domid>`.
+
 
