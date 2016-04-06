@@ -15,8 +15,8 @@ module Main (C: V1_LWT.CONSOLE) = struct
   (* These are like [C.log] and [C.log_s] but accept printf-style
    * formatting instructions.
    *)
-  let log   c fmt = Printf.kprintf (fun msg -> C.log   c msg) fmt 
   let log_s c fmt = Printf.kprintf (fun msg -> C.log_s c msg) fmt
+  let log   c fmt = Printf.kprintf (fun msg -> C.log   c msg) fmt
 
 
   (* The suspend operation acknowledges the request by removing 
@@ -31,8 +31,15 @@ module Main (C: V1_LWT.CONSOLE) = struct
     log_s c "We're back: domid=%s" domid >>= fun _ -> 
     return true
 
-  let sleep secs    = return (OS.Time.sleep secs)
+  let read client path  = 
+    catch   
+        (fun () -> OS.Xs.(immediate client (fun h -> read h path)) >>= fun
+          msg -> return (Some msg) )
+        ( function 
+        | _ -> return None
+        )
 
+  let sleep secs    = OS.Time.sleep secs
   let poweroff ()   = OS.Sched.(shutdown Poweroff); return false 
   let reboot ()     = OS.Sched.(shutdown Reboot);   return false 
   let halt ()       = OS.Sched.(shutdown Poweroff); return false
@@ -44,20 +51,16 @@ module Main (C: V1_LWT.CONSOLE) = struct
     OS.Xs.(immediate client (fun h -> read h "domid")) >>= fun domid -> 
     log_s c "domid=%s" domid >>= fun () ->
     let rec loop () = 
-      OS.Xs.(immediate client (fun h -> directory h "control")) >>= fun dir -> 
-      begin if List.mem "shutdown" dir then 
-        OS.Xs.(immediate client (fun h -> read h "control/shutdown")) >>= fun msg ->
-        log_s c "Got control message: %s" msg >>= fun () ->
-        match msg with
-        | "suspend"   -> suspend client c
-        | "poweroff"  -> poweroff ()
-        | "reboot"    -> reboot ()
-        | "halt"      -> halt ()
-        | "crash"     -> crash ()
-        | _           -> return false
-      else 
-        return false 
-      end >>= fun _ ->
+        read client "control/shutdown" >>= 
+        ( function
+        | Some "suspend"    -> suspend client c
+        | Some "poweroff"   -> poweroff ()
+        | Some "reboot"     -> reboot ()
+        | Some "halt"       -> halt ()
+        | Some "crash"      -> crash ()
+        | Some msg          -> log_s c "control/shutdown %s" msg >>= fun _ -> return false
+        | None              -> log_s c "No message in control/shutdown" >>= fun _ -> return false
+        ) >>= fun _ ->
       sleep 1.0 >>= fun _ ->
       loop ()
     in 
