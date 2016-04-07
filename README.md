@@ -41,19 +41,19 @@ The kernel reads control messages from the Xen Store from
 "control/shutdown" and responds to them. In addition, it reads from 
 "control/testing". Here is how the two interact:
 
-  shutdown  testing
-  -----------------
-  msg                 -> regular case, responds to msg
-  msg       tst       -> ignores msg, responds to tst
-            tst       -> responds to tst
+    shutdown  testing
+    -----------------
+    msg                 -> regular case, responds to msg
+    msg       tst       -> ignores msg, responds to tst
+              tst       -> responds to tst
 
 Valid messages are:
 
-  suspend  
-  poweroff 
-  reboot   
-  halt     
-  crash    
+    suspend  
+    poweroff 
+    reboot   
+    halt     
+    crash    
 
 Typically, control/shutdown is written only by Xen. To write to
 control/testing:
