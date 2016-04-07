@@ -1,43 +1,60 @@
 (* This code implements a minimal kernel that responds to
- * lifecycle events.
+ * life cycle events.
  *)
 
 (* Documentation of important interfaces:
  * http://mirage.github.io/mirage-xen/#Xs
  * http://mirage.github.io/mirage-xen/#Sched
  * http://mirage.github.io/mirage-types/#V1:CONSOLE
+ * http://mirage.github.io/xenstore/#Xs_protocol
  *)
 
 
 module Main (C: V1_LWT.CONSOLE) = struct
-  open Lwt
+
+  let (>>=)  = Lwt.(>>=)
+  let return = Lwt.return
+
+  (* command strings *)
+  let control_shutdown = "control/shutdown"
+  let control_testing  = "control/testing"
+
 
   (* These are like [C.log] and [C.log_s] but accept printf-style
    * formatting instructions.
    *)
   let log_s c fmt = Printf.kprintf (fun msg -> C.log_s c msg) fmt
-  let log   c fmt = Printf.kprintf (fun msg -> C.log   c msg) fmt
+  (* let log   c fmt = Printf.kprintf (fun msg -> C.log   c msg) fmt *)
 
+  let rm   client path = OS.Xs.(immediate client @@ fun h -> rm   h path)
+  let read client path = OS.Xs.(immediate client @@ fun h -> read h path) 
+
+  (* [read_opt client path] reads [path] from the Xen Store and
+   * returns it as an option value on success, and [None] otherwise.
+   * Unexpected errors still raise an exception.
+   *)
+  let read_opt client  path  = 
+    Lwt.catch
+      ( fun () ->
+        read client path >>= fun msg -> 
+        return (Some msg)
+      )
+      ( function 
+      | Xs_protocol.Enoent _ -> return None 
+      | ex                   -> Lwt.fail ex 
+      )
 
   (* The suspend operation acknowledges the request by removing 
    * "control/shutdown" from Xen Store.
    *)
   let suspend client c =
-    OS.Xs.(immediate client (fun h -> rm h "control/shutdown")) >>= fun _ -> 
-    OS.Sched.suspend () >>= fun cancelled -> 
-    log_s c "cancelled=%d" cancelled >>= fun () ->
-    log_s c "About to read domid"    >>= fun () ->
-    OS.Xs.(immediate client (fun h -> read h "domid")) >>= fun domid -> 
+    rm client control_shutdown>>= fun () ->
+    OS.Sched.suspend ()                 >>= fun cancelled -> 
+    log_s c "cancelled=%d" cancelled    >>= fun () ->
+    read client "domid"                 >>= fun domid ->
     log_s c "We're back: domid=%s" domid >>= fun _ -> 
     return true
 
-  let read client path  = 
-    catch   
-        (fun () -> OS.Xs.(immediate client (fun h -> read h path)) >>= fun
-          msg -> return (Some msg) )
-        ( function 
-        | _ -> return None
-        )
 
   let sleep secs    = OS.Time.sleep secs
   let poweroff ()   = OS.Sched.(shutdown Poweroff); return false 
@@ -45,22 +62,34 @@ module Main (C: V1_LWT.CONSOLE) = struct
   let halt ()       = OS.Sched.(shutdown Poweroff); return false
   let crash ()      = OS.Sched.(shutdown Crash);    return false
 
+  let dispatch client c = function
+    | "suspend"  -> suspend client c
+    | "poweroff" -> poweroff ()
+    | "reboot"   -> reboot ()
+    | "halt"     -> halt ()
+    | "crash"    -> crash ()
+    | msg        -> log_s c "Unknown message %s" msg >>= fun () -> 
+                    return false
+
+  let override client c msg tst = 
+    log_s c "overriding command %s with %s" msg tst >>= fun () ->
+    rm client control_testing >>= fun () ->
+    dispatch client c tst
+
   (* event loop *)  
   let start c = 
-    OS.Xs.make () >>= fun client -> 
-    OS.Xs.(immediate client (fun h -> read h "domid")) >>= fun domid -> 
-    log_s c "domid=%s" domid >>= fun () ->
+    OS.Xs.make ()               >>= fun client -> 
+    read client "domid"         >>= fun domid ->
+    log_s c "domid=%s" domid    >>= fun () ->
     let rec loop () = 
-        read client "control/shutdown" >>= 
-        ( function
-        | Some "suspend"    -> suspend client c
-        | Some "poweroff"   -> poweroff ()
-        | Some "reboot"     -> reboot ()
-        | Some "halt"       -> halt ()
-        | Some "crash"      -> crash ()
-        | Some msg          -> log_s c "control/shutdown %s" msg >>= fun _ -> return false
-        | None              -> log_s c "No message in control/shutdown" >>= fun _ -> return false
-        ) >>= fun _ ->
+      read_opt client control_shutdown >>= fun msg ->
+      read_opt client control_testing  >>= fun tst ->
+      ( match msg, tst with
+      | None, _         ->  log_s c "%s is empty" control_shutdown >>= fun () ->
+                            return false
+      | Some msg, None      -> dispatch client c msg
+      | Some msg, Some tst  -> override client c msg tst
+      ) >>= fun _ ->
       sleep 1.0 >>= fun _ ->
       loop ()
     in 
