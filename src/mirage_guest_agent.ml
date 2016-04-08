@@ -12,6 +12,8 @@
 
 module Main (C: V1_LWT.CONSOLE) = struct
 
+  module CMD = Commands
+
   let (>>=)  = Lwt.(>>=)
   let return = Lwt.return
 
@@ -64,39 +66,50 @@ module Main (C: V1_LWT.CONSOLE) = struct
 
   (** [dispatch] implements the reaction to control messages *)
   let dispatch client c = function
-    | "suspend"  -> suspend client c
-    | "poweroff" -> poweroff ()
-    | "reboot"   -> reboot ()
-    | "halt"     -> halt ()
-    | "crash"    -> crash ()
-    | msg        -> log_s c "Unknown message %s" msg >>= fun () -> 
-      return false
+    | CMD.Suspend   -> suspend client c
+    | CMD.PowerOff  -> poweroff ()
+    | CMD.Reboot    -> reboot ()
+    | CMD.Halt      -> halt ()
+    | CMD.Crash     -> crash ()
+
 
   (** [override client c msg tst] implements the reaction to
    * having received [msg] but reacting as having received [tst] instead
-  *)
   let override client c msg tst = 
     log_s c "overriding command %s with %s" msg tst >>= fun () ->
     rm client control_testing >>= fun () ->
     dispatch client c tst
+  *)
 
   (* event loop *)  
   let start c = 
     OS.Xs.make ()               >>= fun client -> 
     read client "domid"         >>= fun domid ->
     log_s c "domid=%s" domid    >>= fun () ->
-    let rec loop tick  = 
+    let rec loop tick override = 
       read_opt client control_shutdown >>= fun msg ->
-      read_opt client control_testing  >>= fun tst ->
-      ( match msg, tst with
-        | None, None ->  
-          log_s c "%s for %s is empty %d" control_shutdown domid tick >>= fun () ->
-          return false
-        | Some msg, None      -> dispatch client c msg (* regular case *) 
-        | Some msg, Some tst  -> override client c msg tst
-      ) >>= fun _ ->
-      sleep 1.0 >>= fun _ ->
-      loop (tick+1)
+        ( match msg, override with
+        | Some msg, Some override -> dispatch client c override
+        | Some msg, None          -> dispatch client c (CMD.shutdown msg)
+        | None    , _             -> return false
+        ) >>= fun x ->
+      read_opt client control_testing >>= 
+        ( function 
+        | Some msg ->
+            rm client control_testing >>= fun () ->
+            ( match CMD.testing msg with
+            | CMD.Now(shutdown)  -> dispatch client c shutdown
+            | CMD.Next(override) -> loop (tick+1) (Some override)
+            ) 
+        | None     -> return x
+        ) >>= fun _ ->
+      sleep 1.0 >>= fun x ->
+      log_s c "domain %s tick %d" domid tick >>= fun () -> 
+      ( match override with
+      | Some _ -> log_s c "override is active"
+      | None   -> return x
+      ) >>= fun x ->
+      loop (tick+1) override
     in 
-    loop 0
+    loop 0 None
 end

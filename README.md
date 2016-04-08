@@ -39,18 +39,12 @@ Once installed, use the CLI on the host to operate the VM or XenCenter.
 
 The kernel reads control messages from the Xen Store from
 "control/shutdown" and responds to them. In addition, it reads from 
-"control/testing". Here is how the two interact:
+"control/testing". 
 
-    shutdown  testing
-    -----------------
-    msg                 -> regular case, responds to msg
-    msg       tst       -> ignores msg, responds to tst
-              tst       -> does nothing
+## Shutdown Messages
 
-Writing a message to testing by itself does nothing. The VM reacts to it
-when a message on shutdown arrives.
-
-Valid messages are:
+The kernel responds to these messages in the "control/shutdown". Usually
+the hypervisor only sends these.
 
     suspend  
     poweroff 
@@ -58,10 +52,33 @@ Valid messages are:
     halt     
     crash    
 
-Typically, control/shutdown is written only by Xen. To write to
-control/testing:
+## Testing Messages
 
-  xenstore write /local/domain/<domid>/control/testing reboot
+The kernel reads messages in "control/testing". Legal messages are:
+
+    now:suspend  
+    now:poweroff 
+    now:reboot   
+    now:halt     
+    now:crash    
+
+Each makes the kernel respond to these immediately. In addition, these
+messages are legal:
+
+    next:suspend  
+    next:poweroff 
+    next:reboot   
+    next:halt     
+    next:crash    
+
+The next time the kernel receives a shutdown message, it ignores the
+message it received and acts on the next:message instead. This permits
+to surprise the hypervisor.
+
+Typically, control/shutdown is written only by Xen. To write to
+control/testing, use:
+
+  xenstore write /local/domain/<domid>/control/testing now:reboot
 
 # Debugging the VM
 
