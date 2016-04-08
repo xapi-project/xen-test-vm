@@ -87,12 +87,14 @@ module Main (C: V1_LWT.CONSOLE) = struct
     read client "domid"         >>= fun domid ->
     log_s c "domid=%s" domid    >>= fun () ->
     let rec loop tick override = 
+      (* read control messages *)
       read_opt client control_shutdown >>= fun msg ->
         ( match msg, override with
         | Some msg, Some override -> dispatch client c override
         | Some msg, None          -> dispatch client c (CMD.shutdown msg)
         | None    , _             -> return false
         ) >>= fun x ->
+      (* read out-of band test messages like now:reboot *)
       read_opt client control_testing >>= 
         ( function 
         | Some msg ->

@@ -4,37 +4,33 @@ open Lwt
 let run = OS.Main.run
 let _   = Printexc.record_backtrace true
 
-module Mirage_guest_agent1 = Mirage_guest_agent.Main(Console_xen)
+module VM = Mirage_vm.Main(Console_xen)
 
-let argv_xen1 = 
-  lazy (Bootvar.argv ())
+let argv    = lazy (Bootvar.argv ())
+let console = lazy (Console_xen.connect "0")
 
-let console_xen_01 = 
-  lazy ( Console_xen.connect "0")
-
-let key1 = lazy (
-  let __argv_xen1 = Lazy.force argv_xen1 in
-  __argv_xen1 >>= function
-  | `Error _e         -> fail (Failure "argv_xen1")
-  | `Ok _argv_xen1    -> 
+let key = lazy (
+  let __argv = Lazy.force argv in
+  __argv >>= function
+  | `Error _e   -> fail (Failure "argv")
+  | `Ok _argv   -> 
     return @@
-    Functoria_runtime.with_argv Key_gen.runtime_keys "suspend" _argv_xen1
+    Functoria_runtime.with_argv Key_gen.runtime_keys "suspend" _argv
 )
 
 let f11 = lazy (
-  let __console_xen_01 = Lazy.force console_xen_01 in
-  __console_xen_01 >>= function
-  | `Error _e -> fail (Failure "console_xen_01")
-  | `Ok _console_xen_01 ->
-    Mirage_guest_agent1.start _console_xen_01 >>= fun t -> Lwt.return (`Ok t)
+  let __console = Lazy.force console in
+  __console >>= function
+  | `Error _e     -> fail (Failure "console")
+  | `Ok _console  -> VM.start _console >>= fun t -> Lwt.return (`Ok t)
 )
 
-let mirage1 = lazy (
-  let __key1 = Lazy.force key1 in
+let mirage = lazy (
+  let __key = Lazy.force key in
   let __f11 = Lazy.force f11 in
-  __key1 >>= function
-  | `Error _e -> fail (Failure "key1")
-  | `Ok _key1 ->
+  __key >>= function
+  | `Error _e -> fail (Failure "key")
+  | `Ok _key ->
     __f11 >>= function
     | `Error _e -> fail (Failure "f11")
     | `Ok _f11 ->
@@ -42,8 +38,8 @@ let mirage1 = lazy (
 )
 
 let () =
-  let t = Lazy.force key1 >>= function
+  let t = Lazy.force key >>= function
     | `Error _e -> exit 1
-    | `Ok _ -> Lazy.force mirage1
+    | `Ok _     -> Lazy.force mirage
   in run t
 
