@@ -45,7 +45,10 @@ The kernel reads control messages from the Xen Store from
     -----------------
     msg                 -> regular case, responds to msg
     msg       tst       -> ignores msg, responds to tst
-              tst       -> responds to tst
+              tst       -> does nothing
+
+Writing a message to testing by itself does nothing. The VM reacts to it
+when a message on shutdown arrives.
 
 Valid messages are:
 

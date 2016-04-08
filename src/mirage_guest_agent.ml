@@ -93,8 +93,6 @@ module Main (C: V1_LWT.CONSOLE) = struct
           log_s c "%s for %s is empty %d" control_shutdown domid tick >>= fun () ->
           return false
         | Some msg, None      -> dispatch client c msg (* regular case *) 
-        | None    , Some tst  -> override client c "none" tst
-        | Some msg, Some tst  -> override client c msg tst
         | Some msg, Some tst  -> override client c msg tst
       ) >>= fun _ ->
       sleep 1.0 >>= fun _ ->
