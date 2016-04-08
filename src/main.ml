@@ -6,8 +6,9 @@ let _   = Printexc.record_backtrace true
 
 module VM = Mirage_vm.Main(Console_xen)
 
-let argv    = lazy (Bootvar.argv ())
-let console = lazy (Console_xen.connect "0")
+let runtime_keys = []
+let argv         = lazy (Bootvar.argv ())
+let console      = lazy (Console_xen.connect "0")
 
 let key = lazy (
   let __argv = Lazy.force argv in
@@ -15,7 +16,7 @@ let key = lazy (
   | `Error _e   -> fail (Failure "argv")
   | `Ok _argv   -> 
     return @@
-    Functoria_runtime.with_argv Key_gen.runtime_keys "suspend" _argv
+    Functoria_runtime.with_argv runtime_keys "suspend" _argv
 )
 
 let f11 = lazy (
