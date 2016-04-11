@@ -9,6 +9,8 @@ eval $(opam config env)
 opam init
 opam install ocamlfind
 
-# now setup OCaml for our Mirage kernel
+# set up OCaml for our Mirage kernel
 . setup.sh
 
+# build it
+make
