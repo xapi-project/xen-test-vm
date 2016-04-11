@@ -73,44 +73,39 @@ module Main (C: V1_LWT.CONSOLE) = struct
     | CMD.Crash     -> crash ()
 
 
-  (** [override client c msg tst] implements the reaction to
-   * having received [msg] but reacting as having received [tst] instead
-  let override client c msg tst = 
-    log_s c "overriding command %s with %s" msg tst >>= fun () ->
-    rm client control_testing >>= fun () ->
-    dispatch client c tst
-  *)
-
-  (* event loop *)  
+   (* event loop *)  
   let start c = 
     OS.Xs.make ()               >>= fun client -> 
     read client "domid"         >>= fun domid ->
     log_s c "domid=%s" domid    >>= fun () ->
     let rec loop tick override = 
-      (* read control messages *)
+      (* read control messages, honor override if present *)
       read_opt client control_shutdown >>= fun msg ->
         ( match msg, override with
-        | Some msg, Some override -> dispatch client c override
-        | Some msg, None          -> dispatch client c (CMD.shutdown msg)
+        | Some _  , Some override -> dispatch client c override
+        | Some msg, None          -> dispatch client c (CMD.Scan.shutdown msg)
         | None    , _             -> return false
         ) >>= fun x ->
-      (* read out-of band test messages like now:reboot *)
+      (* read out-of band test messages like now:reboot or 
+       * next:reboot and register it as an override  
+       *)
       read_opt client control_testing >>= 
         ( function 
         | Some msg ->
             rm client control_testing >>= fun () ->
-            ( match CMD.testing msg with
+            ( match CMD.Scan.testing msg with
             | CMD.Now(shutdown)  -> dispatch client c shutdown
             | CMD.Next(override) -> loop (tick+1) (Some override)
             ) 
         | None     -> return x
         ) >>= fun _ ->
+      (* just some reportin *)
       sleep 1.0 >>= fun x ->
       log_s c "domain %s tick %d" domid tick >>= fun () -> 
       ( match override with
-      | Some _ -> log_s c "override is active"
-      | None   -> return x
-      ) >>= fun x ->
+      | Some cmd -> log_s c "override %s is active" (CMD.String.shutdown cmd) 
+      | None     -> return x
+      ) >>= fun _ ->
       loop (tick+1) override
     in 
     loop 0 None

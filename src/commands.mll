@@ -32,7 +32,23 @@
     | _           { raise (Error "unknown side channel command") }
  
 {
-  let shutdown str =  shutdown (L.from_string str) 
-  let testing  str =  testing  (L.from_string str) 
+
+  module Scan = struct
+    let shutdown str =  shutdown (L.from_string str) 
+    let testing  str =  testing  (L.from_string str) 
+  end
+
+  module String = struct
+    let shutdown = function
+      | Suspend   -> "suspend"
+      | PowerOff  -> "poweroff"
+      | Reboot    -> "reboot"
+      | Halt      -> "halt"
+      | Crash     -> "crash"
+
+    let testing = function
+      | Now(msg)  -> Printf.sprintf "now:%s"  (shutdown msg)
+      | Next(msg) -> Printf.sprintf "next:%s" (shutdown msg)
+  end
 }
  
