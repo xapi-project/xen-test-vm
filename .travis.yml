@@ -1,9 +1,10 @@
+dist: trusty
 language: c
 sudo: required
 install: 
     - curl https://raw.githubusercontent.com/lindig/xen-test-vm/master/travis.sh | bash -ex 
     - curl https://raw.githubusercontent.com/lindig/xen-test-vm/master/setup.sh | bash -ex
 script:
-    - bash -e 'eval $(opam config env) && make'
+    - bash -c 'eval $(opam config env) && make'
 os:
     - linux
