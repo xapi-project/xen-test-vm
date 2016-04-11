@@ -104,7 +104,8 @@ module Main (C: V1_LWT.CONSOLE) = struct
       sleep 1.0 >>= fun x ->
       log_s c "domain %s tick %d" domid tick >>= fun () -> 
       ( match override with
-      | Some cmd -> log_s c "override %s is active" (CMD.String.shutdown cmd) 
+      | Some cmd -> log_s c "override %s is active" 
+                      (CMD.String.shutdown cmd) >>= fun _ -> return x 
       | None     -> return x
       ) >>= fun _ ->
       loop (tick+1) override
