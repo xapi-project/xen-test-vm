@@ -13,6 +13,7 @@
 module Main (C: V1_LWT.CONSOLE) = struct
 
   module CMD = Commands
+  module XS  = OS.Xs (* Xen Store *)
 
   let (>>=)  = Lwt.(>>=)
   let return = Lwt.return
@@ -22,14 +23,13 @@ module Main (C: V1_LWT.CONSOLE) = struct
   let control_testing  = "control/testing"
 
 
-  (* These are like [C.log] and [C.log_s] but accept printf-style
+  (* These are like [C.log] and [C.log] but accept printf-style
    * formatting instructions.
   *)
-  let log_s c fmt = Printf.kprintf (fun msg -> C.log_s c msg) fmt
-  (* let log   c fmt = Printf.kprintf (fun msg -> C.log   c msg) fmt *)
+  let log c fmt = Printf.kprintf (fun msg -> C.log_s c msg) fmt
 
-  let rm   client path = OS.Xs.(immediate client @@ fun h -> rm   h path)
-  let read client path = OS.Xs.(immediate client @@ fun h -> read h path) 
+  let read client path = XS.(immediate client @@ fun h -> read h path) 
+  let ack  client path = XS.(immediate client @@ fun h -> write h path "") 
 
   (* [read_opt client path] reads [path] from the Xen Store and
    * returns it as an option value on success, and [None] otherwise.
@@ -46,27 +46,18 @@ module Main (C: V1_LWT.CONSOLE) = struct
         | ex                   -> Lwt.fail ex 
       )
 
-  (* The suspend operation acknowledges the request by removing 
-   * "control/shutdown" from Xen Store.
-  *)
-  let suspend client c =
-    rm client control_shutdown>>= fun () ->
-    OS.Sched.suspend ()                 >>= fun cancelled -> 
-    log_s c "cancelled=%d" cancelled    >>= fun () ->
-    read client "domid"                 >>= fun domid ->
-    log_s c "We're back: domid=%s" domid >>= fun _ -> 
-    return true
-
 
   let sleep secs    = OS.Time.sleep secs
+
+  let suspend ()    = OS.Sched.(shutdown Suspend);  return false 
   let poweroff ()   = OS.Sched.(shutdown Poweroff); return false 
   let reboot ()     = OS.Sched.(shutdown Reboot);   return false 
   let halt ()       = OS.Sched.(shutdown Poweroff); return false
   let crash ()      = OS.Sched.(shutdown Crash);    return false
 
   (** [dispatch] implements the reaction to control messages *)
-  let dispatch client c = function
-    | CMD.Suspend   -> suspend client c
+  let dispatch = function
+    | CMD.Suspend   -> suspend ()
     | CMD.PowerOff  -> poweroff ()
     | CMD.Reboot    -> reboot ()
     | CMD.Halt      -> halt ()
@@ -75,17 +66,20 @@ module Main (C: V1_LWT.CONSOLE) = struct
 
    (* event loop *)  
   let start c = 
-    OS.Xs.make ()               >>= fun client -> 
-    read client "domid"         >>= fun domid ->
-    log_s c "domid=%s" domid    >>= fun () ->
+    OS.Xs.make () >>= fun client -> 
     let rec loop tick override = 
       (* read control messages, honor override if present *)
       read_opt client control_shutdown >>= fun msg ->
         ( match msg, override with
-        | Some _  , Some override -> dispatch client c override >>= fun _ ->
-                                     loop (tick+1) None (* clear override *)
-        | Some msg, None          -> dispatch client c (CMD.Scan.shutdown msg)
-        | None    , _             -> return false
+        | Some _  , Some override ->
+            ack client control_shutdown >>= fun () ->
+            dispatch override >>= fun _ ->
+            loop (tick+1) None (* clear override *)
+        | Some msg, None ->
+            ack client control_shutdown >>= fun () ->
+            dispatch (CMD.Scan.shutdown msg)
+        | None    , _ -> 
+            return false
         ) >>= fun x ->
       (* read out-of band test messages like now:reboot or 
        * next:reboot and register it as an override  
@@ -93,18 +87,20 @@ module Main (C: V1_LWT.CONSOLE) = struct
       read_opt client control_testing >>= 
         ( function 
         | Some msg ->
-            rm client control_testing >>= fun () ->
+            ack client control_testing >>= fun () ->
             ( match CMD.Scan.testing msg with
-            | CMD.Now(shutdown)  -> dispatch client c shutdown
+            | CMD.Now(shutdown)  -> dispatch shutdown
             | CMD.Next(override) -> loop (tick+1) (Some override)
             ) 
-        | None     -> return x
+        | None -> 
+            return x
         ) >>= fun _ ->
       (* just some reporting *)
       sleep 1.0 >>= fun x ->
-      log_s c "domain %s tick %d" domid tick >>= fun () -> 
+      read client "domid" >>= fun domid ->
+      log c "domain %s tick %d" domid tick >>= fun () -> 
       ( match override with
-      | Some cmd -> log_s c "override %s is active" 
+      | Some cmd -> log c "override %s is active" 
                       (CMD.String.shutdown cmd) >>= fun _ -> return x 
       | None     -> return x
       ) >>= fun _ ->
