@@ -3,9 +3,9 @@ sudo: required
 install: 
     - curl -O https://raw.githubusercontent.com/lindig/xen-test-vm/master/travis.sh 
     - curl -O https://raw.githubusercontent.com/lindig/xen-test-vm/master/setup.sh 
-script:
     - bash -ex travis.sh
     - bash -ex setup.sh
+script:
     - make
 os:
-  - linux
+    - linux
