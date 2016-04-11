@@ -1,9 +1,11 @@
 language: c
 sudo: required
-install: curl -O https://raw.githubusercontent.com/lindig/xen-test-vm/master/travis.sh 
-install: curl -O https://raw.githubusercontent.com/lindig/xen-test-vm/master/setup.sh 
-script: bash -ex travis.sh
-script: bash -ex setup.sh
-script: make
+install: 
+    - curl -O https://raw.githubusercontent.com/lindig/xen-test-vm/master/travis.sh 
+    - curl -O https://raw.githubusercontent.com/lindig/xen-test-vm/master/setup.sh 
+script:
+    - bash -ex travis.sh
+    - bash -ex setup.sh
+    - make
 os:
   - linux
