@@ -1,10 +1,13 @@
 #! /bin/sh
 # setup an OCaml environment
 
-sudo add-apt-repository ppa:avsm/ppa
-sudo apt-get update
-sudo apt-get install -y ocaml ocaml-native-compilers opam
-sudo apt-get install -y ocamlbuild ocamlfind
+echo "yes" | sudo add-apt-repository ppa:avsm/ppa
+sudo apt-get update -qq
+sudo apt-get install -qq ocaml ocaml-native-compilers opam
+
+eval $(opam config env)
+opam init
+opam install ocamlfind
 
 ocamlc -version
 opam -version
