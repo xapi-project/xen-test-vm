@@ -82,7 +82,8 @@ module Main (C: V1_LWT.CONSOLE) = struct
       (* read control messages, honor override if present *)
       read_opt client control_shutdown >>= fun msg ->
         ( match msg, override with
-        | Some _  , Some override -> dispatch client c override
+        | Some _  , Some override -> dispatch client c override >>= fun _ ->
+                                     loop (tick+1) None (* clear override *)
         | Some msg, None          -> dispatch client c (CMD.Scan.shutdown msg)
         | None    , _             -> return false
         ) >>= fun x ->
@@ -99,7 +100,7 @@ module Main (C: V1_LWT.CONSOLE) = struct
             ) 
         | None     -> return x
         ) >>= fun _ ->
-      (* just some reportin *)
+      (* just some reporting *)
       sleep 1.0 >>= fun x ->
       log_s c "domain %s tick %d" domid tick >>= fun () -> 
       ( match override with
