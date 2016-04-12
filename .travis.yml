@@ -1,10 +1,12 @@
-dist: trusty
-language: c
 sudo: required
-install: 
-    - curl -O https://raw.githubusercontent.com/lindig/xen-test-vm/master/setup.sh 
-    - curl https://raw.githubusercontent.com/lindig/xen-test-vm/master/travis.sh | bash -ex 
+service:
+  - docker
+before_install:
+  - docker build -t ring3/ocaml .
+  - docker ps -a
 script:
-    - bash -c 'eval $(opam config env) && make'
+  - chmod -R +w .
+  - docker run -t -t -v $PWD:/mnt ring3/ocaml make -C /mnt
+
 os:
     - linux

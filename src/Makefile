@@ -14,6 +14,7 @@ OCB  	= ocamlbuild -use-ocamlfind $(OCBOPTS)
 all: 	
 	$(OCB) main.native.o
 	ld -d -static -nostdlib $(LIBS) -o $(VM)
+	gzip $(VM)
 
 LIBS +=	_build/main.native.o 
 LIBS +=	-L$(OPAMLIB) 
@@ -34,6 +35,6 @@ LIBS +=	$(LIBGCC)
 
 clean:
 	ocamlbuild -clean
-	rm -f $(VM)
+	rm -f $(VM).gz
 
 

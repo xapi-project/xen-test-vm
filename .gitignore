@@ -1,3 +1,4 @@
 src/_build
 src/test-vm.xen
+src/test-vm.xen.gz
 
