@@ -1,0 +1,13 @@
+sudo: required
+language: c
+services:
+  - docker
+before_install:
+  - docker build -t ring3/ocaml .
+  - docker ps -a
+script:
+  - chmod -R o+w .
+  - docker run -t -t -v $PWD:/mnt ring3/ocaml make -C /mnt
+
+os:
+    - linux

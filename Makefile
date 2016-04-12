@@ -7,6 +7,7 @@ HOST 		= "root@dt87"
 
 all:		src
 		$(MAKE) -C src/ all
+		ls -lh src/test-vm.xen.gz
 
 		# This target is specific to Citrix
 install: 	all
