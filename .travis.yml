@@ -10,8 +10,9 @@ before_install:
   - docker build -t ring3/ocaml .
   - docker ps -a
 script:
-  - chmod -R o+w .
+  - chmod -R o+w src/
   - docker run -t -t -v $PWD:/mnt ring3/ocaml make -C /mnt
+  - ls -lh src/
 
 deploy:
   provider: releases
