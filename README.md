@@ -41,4 +41,57 @@ As root on $HOST:
     
 Once installed, use the CLI on the host to operate the VM or XenCenter.
 
+# Out-of-Band Control Messages
+
+The kernel reads control messages from the Xen Store from
+"control/shutdown" and responds to them. In addition, it reads from 
+"control/testing". 
+
+## Shutdown Messages
+
+The kernel responds to these messages in the "control/shutdown". Usually
+the hypervisor only sends these.
+
+    suspend  
+    poweroff 
+    reboot   
+    halt     
+    crash    
+
+## Testing Messages
+
+The kernel reads messages in "control/testing". Legal messages are:
+
+    now:suspend  
+    now:poweroff 
+    now:reboot   
+    now:halt     
+    now:crash    
+
+Each makes the kernel respond to these immediately. In addition, these
+messages are legal:
+
+    next:suspend  
+    next:poweroff 
+    next:reboot   
+    next:halt     
+    next:crash    
+
+The next time the kernel receives a shutdown message, it ignores the
+message it received and acts on the next:message instead. This permits
+to surprise the hypervisor.
+
+Typically, control/shutdown is written only by Xen. To write to
+control/testing, use:
+
+  xenstore write /local/domain/<domid>/control/testing now:reboot
+
+# Debugging the VM
+
+To direct console output of the VM to a file, you can tell the $HOST:
+
+    xenstore write /local/logconsole/@ "/tmp/console.%d"
+
+Output then goes to `/tmp/console.<domid>`.
+
 
