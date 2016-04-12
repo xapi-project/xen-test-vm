@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/lindig/xen-test-vm.svg?branch=travis)](https://travis-ci.org/lindig/xen-test-vm)
 
 # Xen Test VM
 
@@ -17,7 +18,12 @@ calling `make` will build `src/test-vm.xen`
         make
 
 A `Dockerfile` can be used to create a Docker container environment for
-compiling the VM. It is not well tested so far.
+compiling the VM. It is used for building on Travis.
+
+# Travis
+
+The VM is built on Travis using the [Dockerfile](./Dockerfile) - see the
+[.travis.yml](./travis.yml).
 
 # Installing the VM
 
