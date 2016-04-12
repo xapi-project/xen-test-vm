@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/lindig/xen-test-vm.svg?branch=travis)](https://travis-ci.org/lindig/xen-test-vm)
+[![Build Status](https://travis-ci.org/lindig/xen-test-vm.svg?branch=master)](https://travis-ci.org/lindig/xen-test-vm)
 
 # Xen Test VM
 
