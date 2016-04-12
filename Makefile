@@ -9,10 +9,12 @@ all:		src
 		$(MAKE) -C src/ all
 		ls -lh src/test-vm.xen.gz
 
-		# This target is specific to Citrix
+		
 install: 	all
 		ssh $(HOST) "test -d /boot/guest || mkdir /boot/guest"
-		scp src/test-vm.xen $(HOST):/boot/guest
+		ssh $(HOST) "cd /boot/guest; rm -f test-vm.xen"
+		scp src/test-vm.xen.gz $(HOST):/boot/guest
+		ssh $(HOST) "cd /boot/guest; gunzip test-vm.xen.gz"
 
 remove: 	
 		true
