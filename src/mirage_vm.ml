@@ -49,7 +49,7 @@ module Main (C: V1_LWT.CONSOLE) = struct
 
   let sleep secs    = OS.Time.sleep secs
 
-  let suspend ()    = OS.Sched.(shutdown Suspend);  return false 
+  let suspend ()    = OS.Sched.suspend () >>= fun _ -> return true
   let poweroff ()   = OS.Sched.(shutdown Poweroff); return false 
   let reboot ()     = OS.Sched.(shutdown Reboot);   return false 
   let halt ()       = OS.Sched.(shutdown Poweroff); return false
@@ -71,6 +71,7 @@ module Main (C: V1_LWT.CONSOLE) = struct
       (* read control messages, honor override if present *)
       read_opt client control_shutdown >>= fun msg ->
         ( match msg, override with
+        | Some "" , _ -> return false
         | Some _  , Some override ->
             ack client control_shutdown >>= fun () ->
             dispatch override >>= fun _ ->
@@ -86,14 +87,14 @@ module Main (C: V1_LWT.CONSOLE) = struct
        *)
       read_opt client control_testing >>= 
         ( function 
+        | Some ""  -> return x
         | Some msg ->
             ack client control_testing >>= fun () ->
             ( match CMD.Scan.testing msg with
             | CMD.Now(shutdown)  -> dispatch shutdown
             | CMD.Next(override) -> loop (tick+1) (Some override)
             ) 
-        | None -> 
-            return x
+        | None -> return x
         ) >>= fun _ ->
       (* just some reporting *)
       sleep 1.0 >>= fun x ->
