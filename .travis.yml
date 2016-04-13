@@ -1,25 +1,23 @@
-# vim:ft=yaml ts=2 shiftwidth=2:
-#
 os:
-  - linux
+- linux
 sudo: required
 language: c
 services:
-  - docker
+- docker
 before_install:
-  - docker build -t ring3/ocaml .
-  - docker images
-  - rvm use ruby-2.2.3
+- docker build -t ring3/ocaml .
+- docker images
+- rvm use ruby-2.2.3
 script:
-  - chmod -R o+w src/
-  - docker run -t -t -v $PWD:/mnt ring3/ocaml make -C /mnt
-  - ls -lh src/
-
+- chmod -R o+w src/
+- docker run -t -t -v $PWD:/mnt ring3/ocaml make -C /mnt
+- ls -lh src/
 deploy:
   provider: releases
   api_key:
-    secure: t4c4vIYXipKLaDk5eixFdgLzuKuUilsqRbjVnCH03r8yUenXDdWfiJQWzUDxnk/figYeWI1hGfqwczahF9vUZMXascTNDjTNUK42PvGWLjnGb1gXEmp2UK8VsS6PHprrPrkA2uyEOZHZR3U5m5ouTU1NIlzkruqnBgZnFo0SNmgl8NIuC2hnAa9SAPcXbu+z0UR6djTcJfQTntkgV7NSm308jqgHqpOyGz+QB1pTYlwrp7A0FVy4Axb0gWOuWccn5m5xpOPKdrkUN74fNBrvJ3KjkW0veJMfYjETpeNAvPetPHGzXSByXqKysTqlYadMxfXVPIj0isoKNdfg7MjMHx72QCvh2WEIm8iedXwztNlNK2pX+LouEvhaeJkoJE4u7PLqcJhZV1YUKhpwoHpKNJbD9m6eoGwVh/+izpt3rbaPRv05cRLzclYoguS5fb3PdtHPWgoLaSIjBDghghD9G1lxlSN4nw1uEJaGjdnNhWTulOxjzQnauVIv38kdYIdjZ1NYHxNMXWEfk0sMMUGPTF8j5F8v204LKUIvRTndhEYmVegT4mI6AMa0gnE2gcaTw2x9yOGwjRZM634EaNsRzgI0mhiYyTbpMTRwW8zIqV8LM72r0JME3UnJmO9PLBdqzdLDsBGfnlEyLzC7mz/hnj6GHXVUPGdk/rEKwTC9cIg=
+    secure: IVMfBoWnV8Ci+HvtOCJiHDMrZEJ4GMjgk9wiJ4i9kRNAizNw6DhEh3O82gZ6MwOVP3RBofDqOgLeZZ2Cfq79UtIzM9WVViPl/bhhiTSzMViTlSPtbCDwHHWV/m/G53Kr10cfQeeeEJSOo32qVJhGZz/DCSbdrulmZNPcp5tGo+IzGxnKj7AqlsMIbNL/T/NFAvuI1k09rIwvQCm9OnLlN23EO7MyXRWcmVGuTrXGqQJA6B/Prq7jUno6JPhNbREGW9HRGDAh4/1ac+VHx5k1XZsPUw5Ow9H6PFXSYQQGuONu+GwxVBMNp5DxiRXdCgo+ZkWKulQzYL8c8IgeCM6/xHvSdMP2R3ATEJDO+32QTcLR9P4Uvq+vunEKSCRoDamLHEz6Zex1D0OOThHlm+aY4Db4buXAC6gzT7v0b4hlmTXGJlbIZ/Ove2q8q2T2P/8tdMtyj5hJ/adrEscdMRNq3RrjMH7yf6tUKX7+Ma+LB4ULykiT7TaqWLBARHYaEYPVQwEDaTaAhWuGC27foGmUZ1c6gCYzTD5u9xGms7alo5AjCBpe5xEaPeyP7f5zXnpIVypePabThuTPAOKPh/ffWqOfc+Zh4xpGmmnLdUAPI6T0Wwrk5kqaUUl0V9d0ZV/LlmI2RhTp5opgBKqYJrVv6HNN8DZmmD/06os5aG2mzkk=
   file: src/test-vm.xen.gz
   skip_cleanup: true
   on:
+    repo: lindig/xen-test-vm
     tags: true
