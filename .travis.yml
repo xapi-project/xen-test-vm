@@ -11,6 +11,7 @@ before_install:
 script:
 - chmod -R o+w src/
 - docker run -t -t -v $PWD:/mnt ring3/ocaml make -C /mnt
+- sudo chown travis.travis src/test-vm.xen.gz
 - ls -lh src/
 deploy:
   provider: releases
