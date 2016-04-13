@@ -1,12 +1,38 @@
-[![Build Status](https://travis-ci.org/lindig/xen-test-vm.svg?branch=master)](https://travis-ci.org/lindig/xen-test-vm)
+[![Build Status](https://travis-ci.org/xapi-project/xen-test-vm.svg?branch=master)](https://travis-ci.org/xapi-project/xen-test-vm)
 
 # Xen Test VM
 
-This repository contains OCaml code to build a minimal
-para-virtualised kernel to run on the Xen hypervisor for testing Xen. The
-kernel is built using the Mirage unikernel framework.
+This repository contains OCaml code to build a minimal para-virtualised
+kernel to run on the Xen hypervisor for testing Xen. The kernel is built
+using the Mirage unikernel framework.
 
-# Building
+# Binary Releases
+
+Binary releases are hosted on 
+[GitHub](https://github.com/xapi-project/xen-test-vm/releases) as
+`xen-test.vm.gz`. The uncompressed file is the kernel that needs to be
+installed.
+
+# Installing the VM
+
+The VM is built as `src/test-vm.xen` and available as binary
+release. The file goes into `/boot/guest` on a host:
+
+    HOST=host
+    ssh root@$HOST "test -d /boot/guest || mkdir /boot/guest"
+    scp test-vm.xen root@$HOST:/boot/guest
+
+The kernel needs to be registered with Xen on the host.  As root on
+`$HOST`, do:
+
+    xe vm-create name-label=minion
+    # this echoes a UUID for the new VM named "minion"
+    xe vm-param-set PV-kernel=/boot/guest/test-vm.xen uuid=$UUID
+    
+Once installed, use the CLI on the host to operate the VM or use
+XenCenter.
+
+# Building from Source Code
 
 The code relies on some pinned OCaml packages in Opam. This dependency
 cannot be expressed naturally in the depends section of an `opam` file. For
@@ -20,26 +46,11 @@ calling `make` will build `src/test-vm.xen`
 A `Dockerfile` can be used to create a Docker container environment for
 compiling the VM. It is used for building on Travis.
 
-# Travis
+# Travis CI
 
 The VM is built on Travis using the [Dockerfile](./Dockerfile) - see the
-[.travis.yml](./travis.yml).
-
-# Installing the VM
-
-The VM is built as `src/test-vm.xen`. Installing it on a Xen host:
-
-    HOST=host
-    ssh root@$HOST "test -d /boot/guest || mkdir /boot/guest"
-    scp src/test-vm.xen root@$HOST:/boot/guest
-
-As root on $HOST:
-
-    xe vm-create name-label=minion
-    # this echoes a UUID for the new VM named "minion"
-    xe vm-param-set PV-kernel=/boot/guest/test-vm.xen uuid=$UUID
-    
-Once installed, use the CLI on the host to operate the VM or XenCenter.
+[.travis.yml](.travis.yml). Travis also creates the releases hosted on
+[GitHub](https://github.com/xapi-project/xen-test-vm/releases).
 
 # Out-of-Band Control Messages
 

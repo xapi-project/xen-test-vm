@@ -20,5 +20,5 @@ deploy:
   file: src/test-vm.xen.gz
   skip_cleanup: true
   on:
-    repo: lindig/xen-test-vm
+    repo: xapi-project/xen-test-vm
     tags: true
