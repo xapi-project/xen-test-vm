@@ -16,6 +16,12 @@ script:
 deploy:
   provider: releases
   api_key:
+    # create this key using "travis setup releases"
+    # deployment only is triggered when 
+    # (1) a release is tagged
+    # (2) it is built from the repo named under on.repp below
+    # Hence, it is safe to built this with Travis from a forked
+    # (private) repo as the release step is not triggered.
     secure: IVMfBoWnV8Ci+HvtOCJiHDMrZEJ4GMjgk9wiJ4i9kRNAizNw6DhEh3O82gZ6MwOVP3RBofDqOgLeZZ2Cfq79UtIzM9WVViPl/bhhiTSzMViTlSPtbCDwHHWV/m/G53Kr10cfQeeeEJSOo32qVJhGZz/DCSbdrulmZNPcp5tGo+IzGxnKj7AqlsMIbNL/T/NFAvuI1k09rIwvQCm9OnLlN23EO7MyXRWcmVGuTrXGqQJA6B/Prq7jUno6JPhNbREGW9HRGDAh4/1ac+VHx5k1XZsPUw5Ow9H6PFXSYQQGuONu+GwxVBMNp5DxiRXdCgo+ZkWKulQzYL8c8IgeCM6/xHvSdMP2R3ATEJDO+32QTcLR9P4Uvq+vunEKSCRoDamLHEz6Zex1D0OOThHlm+aY4Db4buXAC6gzT7v0b4hlmTXGJlbIZ/Ove2q8q2T2P/8tdMtyj5hJ/adrEscdMRNq3RrjMH7yf6tUKX7+Ma+LB4ULykiT7TaqWLBARHYaEYPVQwEDaTaAhWuGC27foGmUZ1c6gCYzTD5u9xGms7alo5AjCBpe5xEaPeyP7f5zXnpIVypePabThuTPAOKPh/ffWqOfc+Zh4xpGmmnLdUAPI6T0Wwrk5kqaUUl0V9d0ZV/LlmI2RhTp5opgBKqYJrVv6HNN8DZmmD/06os5aG2mzkk=
   file: src/test-vm.xen.gz
   skip_cleanup: true
