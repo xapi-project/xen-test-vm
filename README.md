@@ -11,7 +11,17 @@ using the Mirage unikernel framework.
 Binary releases are hosted on 
 [GitHub](https://github.com/xapi-project/xen-test-vm/releases) as
 `xen-test.vm.gz`. The uncompressed file is the kernel that needs to be
-installed.
+installed. You could use the following code in a script:
+
+```sh
+VERSION="0.0.5"
+NAME="xen-test-vm-$VERSION"
+GH="https://github.com/xapi-project"
+VM="$GH/xen-test-vm/releases/download/$VERSION/test-vm.xen.gz"
+KERNEL="xen-test-vm-${VERSION//./-}.xen.gz"
+
+curl --fail -s -L "$VM" > "$KERNEL"
+```
 
 # Installing the VM
 
