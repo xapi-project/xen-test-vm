@@ -62,9 +62,10 @@ module Main (C: V1_LWT.CONSOLE) = struct
     | CMD.Reboot    -> reboot ()
     | CMD.Halt      -> halt ()
     | CMD.Crash     -> crash ()
+    | CMD.Ignore    -> return false
 
 
-   (* event loop *)  
+  (* event loop *)  
   let start c = 
     OS.Xs.make () >>= fun client -> 
     let rec loop tick override = 

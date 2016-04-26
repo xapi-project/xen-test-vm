@@ -12,6 +12,7 @@
     | Reboot
     | Halt
     | Crash
+    | Ignore
 
   type testing =
     | Now   of shutdown
@@ -24,6 +25,7 @@
     | "reboot"    { Reboot }
     | "halt"      { Halt }
     | "crash"     { Crash }
+    | "ignore"    { Ignore }
     | _           { raise (Error "unknown shutdown command") }
 
   and testing = parse
@@ -45,6 +47,7 @@
       | Reboot    -> "reboot"
       | Halt      -> "halt"
       | Crash     -> "crash"
+      | Ignore    -> "ignore"
 
     let testing = function
       | Now(msg)  -> Printf.sprintf "now:%s"  (shutdown msg)
