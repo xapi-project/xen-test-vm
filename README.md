@@ -11,7 +11,17 @@ using the Mirage unikernel framework.
 Binary releases are hosted on 
 [GitHub](https://github.com/xapi-project/xen-test-vm/releases) as
 `xen-test.vm.gz`. The uncompressed file is the kernel that needs to be
-installed.
+installed. You could use the following code in a script:
+
+```sh
+VERSION="0.0.5"
+NAME="xen-test-vm-$VERSION"
+GH="https://github.com/xapi-project"
+VM="$GH/xen-test-vm/releases/download/$VERSION/test-vm.xen.gz"
+KERNEL="xen-test-vm-${VERSION//./-}.xen.gz"
+
+curl --fail -s -L "$VM" > "$KERNEL"
+```
 
 # Installing the VM
 
@@ -20,14 +30,14 @@ release. The file goes into `/boot/guest` on a host:
 
     HOST=host
     ssh root@$HOST "test -d /boot/guest || mkdir /boot/guest"
-    scp test-vm.xen root@$HOST:/boot/guest
+    scp test-vm.xen.gz root@$HOST:/boot/guest
 
 The kernel needs to be registered with Xen on the host.  As root on
 `$HOST`, do:
 
     xe vm-create name-label=minion
     # this echoes a UUID for the new VM named "minion"
-    xe vm-param-set PV-kernel=/boot/guest/test-vm.xen uuid=$UUID
+    xe vm-param-set PV-kernel=/boot/guest/test-vm.xen.gz uuid=$UUID
     
 Once installed, use the CLI on the host to operate the VM or use
 XenCenter.
@@ -68,6 +78,7 @@ the hypervisor only sends these.
     reboot   
     halt     
     crash    
+    ignore
 
 ## Testing Messages
 
@@ -78,6 +89,7 @@ The kernel reads messages in "control/testing". Legal messages are:
     now:reboot   
     now:halt     
     now:crash    
+    now:ignore
 
 Each makes the kernel respond to these immediately. In addition, these
 messages are legal:
@@ -87,6 +99,7 @@ messages are legal:
     next:reboot   
     next:halt     
     next:crash    
+    next:ignore
 
 The next time the kernel receives a shutdown message, it ignores the
 message it received and acts on the next:message instead. This permits

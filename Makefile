@@ -14,7 +14,6 @@ install: 	all
 		ssh $(HOST) "test -d /boot/guest || mkdir /boot/guest"
 		ssh $(HOST) "cd /boot/guest; rm -f test-vm.xen"
 		scp src/test-vm.xen.gz $(HOST):/boot/guest
-		ssh $(HOST) "cd /boot/guest; gunzip test-vm.xen.gz"
 
 remove: 	
 		true

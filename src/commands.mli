@@ -7,6 +7,7 @@ type shutdown =
   | Reboot
   | Halt
   | Crash
+  | Ignore
 
 type testing =
   | Now   of shutdown
