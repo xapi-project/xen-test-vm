@@ -14,12 +14,13 @@ OCB  	= ocamlbuild -use-ocamlfind $(OCBOPTS)
 all: 	
 	$(OCB) main.native.o
 	ld -d -static -nostdlib $(LIBS) -o $(VM)
-	gzip $(VM)
+	gzip -f $(VM)
 
 LIBS +=	_build/main.native.o 
 LIBS +=	-L$(OPAMLIB) 
 LIBS +=	-L$(OPAMLIB)/minios-xen 
 LIBS +=	-L$(OPAMLIB)/io-page 
+LIBS += -L$(OPAMLIB)/yojson
 LIBS +=	$(OPAMLIB)/mirage-xen/libxencamlbindings.a 
 LIBS +=	$(OPAMLIB)/mirage-xen-ocaml/libxenasmrun.a 
 LIBS +=	$(OPAMLIB)/mirage-xen-ocaml/libxenotherlibs.a 
