@@ -11,3 +11,4 @@ opam install -q -y mirage-xen
 opam install -q -y mirage-console
 opam install -q -y mirage-bootvar-xen
 opam install -q -y mirage
+opam install -q -y yojson

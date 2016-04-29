@@ -18,14 +18,13 @@ type ack =
   | AckDelete           (* delete key /control/shutdown *)
 
 (** message to a guest *)
-type message =
+type t =
   | Now           of action
   | OnShutdown    of ack * action
 
 
-module Scan : sig
-  val shutdown: string -> action   (* control/shutdown *)
-  val message:  string -> message  (* control/testing - in JSON *)
-end
+(** [from_string str] reads a JSON object [str] and returns a [t]
+  * value that represens it *)
+val from_string: string -> t  (* Error *)
 
 
