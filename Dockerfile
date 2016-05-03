@@ -20,6 +20,8 @@ RUN opam pin add -n -y mirage-bootvar-xen \
     git://github.com/jonludlam/mirage-bootvar-xen#better-parser
 RUN opam pin add -n -y minios-xen \
     git://github.com/jonludlam/mini-os#suspend-resume3
+
+RUN opam pin add -n -y cstruct 1.9.0
 RUN opam install -q -y mirage-xen
 RUN opam install -q -y mirage-console
 RUN opam install -q -y mirage-bootvar-xen
