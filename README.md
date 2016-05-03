@@ -42,17 +42,10 @@ XenCenter.
 
 # Building from Source Code
 
-The code relies on some pinned OCaml packages in Opam. This dependency
-cannot be expressed naturally in the depends section of an `opam` file. For
-now, this requires to install the dependencies manually. Apart from that,
-calling `make` will build `src/test-vm.xen`
+    opam pin add xen-test-vm .
+    opam install xen-test-vm
 
-
-    ./setup.sh # executes opam installations
-    make
-
-A `Dockerfile` can be used to create a Docker container environment for
-compiling the VM. It is used for building on Travis.
+Watch the output for where the kernel gets installed.
 
 # Travis CI
 
