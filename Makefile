@@ -10,12 +10,16 @@ all:		src
 		$(MAKE) -C src/ all
 		ls -lh $(VM)
 
+package: 	src
+		opam pin add -y xen-test-vm .
+		opam install xen-test-vm
+
 install: 	
 		mkdir -p $(LIB)
 		cp $(VM) $(LIB)
 
 remove: 	
-		rm -f $(lib)/$(VM)
+		rm -f $(LIB)/$(VM)
 		
 clean:
 		$(MAKE) -C src clean
