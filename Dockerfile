@@ -26,6 +26,7 @@ RUN opam install -q -y mirage-xen
 RUN opam install -q -y mirage-console
 RUN opam install -q -y mirage-bootvar-xen
 RUN opam install -q -y mirage
+RUN opam install -q -y yojson
 
 ENTRYPOINT [ "opam", "config", "exec", "--" ]
 CMD [ "bash" ]
