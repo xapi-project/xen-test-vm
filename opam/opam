@@ -16,7 +16,6 @@ homepage: "https://github.com/lindig/xen-test-vm"
 dev-repo: "https://github.com/lindig/xen-test-vm"
 bug-reports: "https://github.com/lindig/xen-test-vm"
 
-bug-reports: 
 depends: [
     "mirage-xen"
     "mirage-console"

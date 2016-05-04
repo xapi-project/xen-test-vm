@@ -42,10 +42,15 @@ XenCenter.
 
 # Building from Source Code
 
-    opam pin add xen-test-vm .
-    opam install xen-test-vm
+The easiest way is to let opam manage the installation of dependencies:
 
-Watch the output for where the kernel gets installed.
+    opam pin add xen-test-vm .
+    opam install -v xen-test-vm
+
+You can also use the provided Makefile:
+
+    make
+    make install 
 
 # Travis CI
 
