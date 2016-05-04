@@ -1,12 +1,18 @@
-language: c
-sudo: required
-install: wget https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/.travis-opam.sh
-env:
-  - OCAML_VERSION=4.02 PACKAGE="xen-test-vm"
 os:
-  - linux
-script: 
-  - bash -ex .travis-opam.sh
+- linux
+sudo: required
+language: c
+services:
+- docker
+before_install:
+- docker build -t ring3/ocaml .
+- docker images
+- rvm use ruby-2.2.3
+script:
+- chmod -R o+w src/
+- docker run -t -t -v $PWD:/mnt ring3/ocaml make -C /mnt
+- sudo chown travis.travis src/test-vm.xen.gz
+- ls -lh src/
 deploy:
   provider: releases
   api_key:
@@ -20,6 +26,5 @@ deploy:
   file: src/test-vm.xen.gz
   skip_cleanup: true
   on:
-    # repo: xapi-project/xen-test-vm
-    repo: lindig/xen-test-vm
+    repo: xapi-project/xen-test-vm
     tags: true
