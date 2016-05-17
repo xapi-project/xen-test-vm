@@ -1,7 +1,8 @@
 
 exception Error of string
 
-type shutdown =
+(** actions a guest can take *)
+type action =
   | Suspend
   | PowerOff
   | Reboot
@@ -9,21 +10,21 @@ type shutdown =
   | Crash
   | Ignore
 
-type testing =
-  | Now   of shutdown
-  | Next  of shutdown 
+(** how is a control message from the host acknowledged by the guest *)
+type ack =
+  | AckOK               (* ack by putting empty string *)
+  | AckWrite of string  (* ack by putting string *)
+  | AckNone             (* don't ack *)
+  | AckDelete           (* delete key /control/shutdown *)
+
+(** message to a guest *)
+type t =
+  | Now           of action
+  | OnShutdown    of ack * action
 
 
-module Scan : sig
-  val shutdown: string -> shutdown
-  val testing:  string -> testing
-end
+(** [from_string str] reads a JSON object [str] and returns a [t]
+  * value that represens it *)
+val from_string: string -> t  (* Error *)
 
-(** module [String] provides functions to turn commands back into
- * strings
- *)
- module String : sig
-  val shutdown: shutdown -> string
-  val testing:   testing  -> string
-end
 

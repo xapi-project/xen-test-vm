@@ -1,3 +1,5 @@
+<!-- vim: set ts=4 sw=4 et: -->
+
 [![Build Status](https://travis-ci.org/xapi-project/xen-test-vm.svg?branch=master)](https://travis-ci.org/xapi-project/xen-test-vm)
 
 # Xen Test VM
@@ -8,24 +10,20 @@ using the Mirage unikernel framework.
 
 # Binary Releases
 
-Binary releases are hosted on 
+Binary releases are hosted on
 [GitHub](https://github.com/xapi-project/xen-test-vm/releases) as
-`xen-test.vm.gz`. The uncompressed file is the kernel that needs to be
-installed. You could use the following code in a script:
+`xen-test.vm.gz`. 
 
-```sh
-VERSION="0.0.5"
-NAME="xen-test-vm-$VERSION"
-GH="https://github.com/xapi-project"
-VM="$GH/xen-test-vm/releases/download/$VERSION/test-vm.xen.gz"
-KERNEL="xen-test-vm-${VERSION//./-}.xen.gz"
+    VERSION="0.0.5"
+    GH="https://github.com/xapi-project"
+    VM="$GH/xen-test-vm/releases/download/$VERSION/test-vm.xen.gz"
+    KERNEL="xen-test-vm-${VERSION//./-}.xen.gz"
 
-curl --fail -s -L "$VM" > "$KERNEL"
-```
+    curl --fail -s -L "$VM" > "$KERNEL"
 
 # Installing the VM
 
-The VM is built as `src/test-vm.xen` and available as binary
+The VM is built as `src/test-vm.xen.gz` and available as binary
 release. The file goes into `/boot/guest` on a host:
 
     HOST=host
@@ -44,17 +42,20 @@ XenCenter.
 
 # Building from Source Code
 
-The code relies on some pinned OCaml packages in Opam. This dependency
-cannot be expressed naturally in the depends section of an `opam` file. For
-now, this requires to install the dependencies manually. Apart from that,
-calling `make` will build `src/test-vm.xen`
+The easiest way is to let opam manage the installation of dependencies:
 
+    opam pin add -n -y mirage-xen \
+    git://github.com/jonludlam/mirage-platform#reenable-suspend-resume2
+    
+    opam pin add -n -y mirage-bootvar-xen \
+    git://github.com/jonludlam/mirage-bootvar-xen#better-parser
+    
+    opam pin add -n -y minios-xen \
+    git://github.com/jonludlam/mini-os#suspend-resume3
 
-        ./setup.sh # executes opam installations
-        make
+    opam pin add xen-test-vm .
+    opam install -v xen-test-vm
 
-A `Dockerfile` can be used to create a Docker container environment for
-compiling the VM. It is used for building on Travis.
 
 # Travis CI
 
@@ -64,13 +65,13 @@ The VM is built on Travis using the [Dockerfile](./Dockerfile) - see the
 
 # Out-of-Band Control Messages
 
-The kernel reads control messages from the Xen Store from
-"control/shutdown" and responds to them. In addition, it reads from 
-"control/testing". 
+In addition to the shutdown messages sent by Xen, the kernel monitors
+the Xen Store for messages. These are used to control the response to
+shutdown messages.
 
 ## Shutdown Messages
 
-The kernel responds to these messages in the "control/shutdown". Usually
+The kernel responds to these messages in "control/shutdown". Usually
 the hypervisor only sends these.
 
     suspend  
@@ -78,37 +79,51 @@ the hypervisor only sends these.
     reboot   
     halt     
     crash    
-    ignore
+
+All other messages are logged and ignored. 
 
 ## Testing Messages
 
-The kernel reads messages in "control/testing". Legal messages are:
+The kernel reads messages in "control/testing". It acknowledges a
+message by replacing the read message with the empty string.
 
-    now:suspend  
-    now:poweroff 
-    now:reboot   
-    now:halt     
-    now:crash    
-    now:ignore
+A message in "control/testing" is a JSON object: 
 
-Each makes the kernel respond to these immediately. In addition, these
-messages are legal:
+    { "when":       "now"           // when to react
+    , "ack":        "ok"            // how to ack control/shutdown
+    , "action":     "reboot"        // how to react to control/shutdown
+    }
 
-    next:suspend  
-    next:poweroff 
-    next:reboot   
-    next:halt     
-    next:crash    
-    next:ignore
+Note that proper JSON does not permit _//_-style comments.  The message
+describes three aspects:
 
-The next time the kernel receives a shutdown message, it ignores the
-message it received and acts on the next:message instead. This permits
-to surprise the hypervisor.
+1. `"when"`: either `"now"` or `"onshutdown"`. The kernel will either
+   immediately or when then next shutdown message arrives perform the
+   `"action"`.
 
-Typically, control/shutdown is written only by Xen. To write to
-control/testing, use:
+2. `"ack"`: either `"ok"`, `"none"`, `"delete"`, or something else. This
+  controls, how the kernel acknowledges the next shutdown message.
+    * `"ok"`: regular behavior
+    * `"none"`: don't acknowledge the message
+    * `"delete"`: delete "control/shutdown"
+    * `"something"`: write the string read to "control/shutdown"
 
-  xenstore write /local/domain/<domid>/control/testing now:reboot
+3. `"action"`: what do do (eiter now or on shutdown). The message in
+   `control/shutdown` is ignored and superseeded by the `action` field: 
+    * `"suspend"`: suspend
+    * `"poweroff"`: power off
+    * `"reboot"`: reboot
+    * `"halt"`: halt
+    * `"crash"`: crash
+    * `"ignore"`: do nothing - ignore the message
+
+To write to `control/testing`, use:
+
+    msg='{"when":"now","ack":"ok","action":"reboot"}'
+    xenstore write /local/domain/<domid>/control/testing "$msg"
+
+The _domid_ is logged to the console and can be obtained through the Xen
+API.
 
 # Debugging the VM
 
@@ -117,5 +132,4 @@ To direct console output of the VM to a file, you can tell the $HOST:
     xenstore write /local/logconsole/@ "/tmp/console.%d"
 
 Output then goes to `/tmp/console.<domid>`.
-
 

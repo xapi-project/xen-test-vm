@@ -27,33 +27,61 @@ module Main (C: V1_LWT.CONSOLE) = struct
    * formatting instructions.
   *)
   let log c fmt = Printf.kprintf (fun msg -> C.log_s c msg) fmt
-
+  let ack' client path  = XS.(immediate client @@ fun h -> write h path "") 
   let read client path = XS.(immediate client @@ fun h -> read h path) 
-  let ack  client path = XS.(immediate client @@ fun h -> write h path "") 
+
+  (* [ack] acknowledges a message and offers to violate the proper
+   * protocol (AckOK) by doing something else *)
+
+  let ack client path = function
+    | CMD.AckOK        -> XS.(immediate client @@ fun h -> write h path "") 
+    | CMD.AckWrite(x)  -> XS.(immediate client @@ fun h -> write h path x )
+    | CMD.AckNone      -> return () (* do nothing *)
+    | CMD.AckDelete    -> XS.(immediate client @@ fun h -> rm h path)
+
 
   (* [read_opt client path] reads [path] from the Xen Store and
    * returns it as an option value on success, and [None] otherwise.
-   * Unexpected errors still raise an exception.
+   * A empty string is returned as [None] (and thus conflates
+   * no string and the empty string).  Unexpected errors still raise an
+   * exception.
   *)
   let read_opt client  path  = 
     Lwt.catch
       ( fun () ->
-          read client path >>= fun msg -> 
-          return (Some msg)
+          read client path >>= 
+          ( function 
+          | ""  -> return None       (* XXX right design choice? *)
+          | msg -> return (Some msg)
+          )
       )
       ( function 
         | Xs_protocol.Enoent _ -> return None 
         | ex                   -> Lwt.fail ex 
       )
 
+  (** [read_cmd] reads a command in JSON format from [path] and 
+   * returns it, or [None] when nothing is there *)
+  let read_cmd c client path =
+    read_opt client path >>= function
+    | None      -> return None
+    | Some msg  ->
+        ack' client path >>= fun () ->
+        Lwt.catch 
+          (fun () -> return @@ Some (Commands.from_string msg))
+          (function
+          | CMD.Error msg -> 
+              log c "bogus command %s" msg >>= fun () -> return None
+          | x -> Lwt.fail x
+          )
 
   let sleep secs    = OS.Time.sleep secs
 
   let suspend ()    = OS.Sched.suspend () >>= fun _ -> return true
-  let poweroff ()   = OS.Sched.(shutdown Poweroff); return false 
-  let reboot ()     = OS.Sched.(shutdown Reboot);   return false 
-  let halt ()       = OS.Sched.(shutdown Poweroff); return false
-  let crash ()      = OS.Sched.(shutdown Crash);    return false
+  let poweroff ()   = OS.Sched.(shutdown Poweroff); return true 
+  let reboot ()     = OS.Sched.(shutdown Reboot);   return true 
+  let halt ()       = OS.Sched.(shutdown Poweroff); return true
+  let crash ()      = OS.Sched.(shutdown Crash);    return true
 
   (** [dispatch] implements the reaction to control messages *)
   let dispatch = function
@@ -68,45 +96,53 @@ module Main (C: V1_LWT.CONSOLE) = struct
   (* event loop *)  
   let start c = 
     OS.Xs.make () >>= fun client -> 
-    let rec loop tick override = 
-      (* read control messages, honor override if present *)
+    let rec loop tick cmd = 
       read_opt client control_shutdown >>= fun msg ->
-        ( match msg, override with
-        | Some "" , _ -> return false
-        | Some _  , Some override ->
-            ack client control_shutdown >>= fun () ->
-            dispatch override >>= fun _ ->
-            loop (tick+1) None (* clear override *)
-        | Some msg, None ->
-            ack client control_shutdown >>= fun () ->
-            dispatch (CMD.Scan.shutdown msg)
-        | None    , _ -> 
-            return false
-        ) >>= fun x ->
-      (* read out-of band test messages like now:reboot or 
-       * next:reboot and register it as an override  
-       *)
-      read_opt client control_testing >>= 
-        ( function 
-        | Some ""  -> return x
-        | Some msg ->
-            ack client control_testing >>= fun () ->
-            ( match CMD.Scan.testing msg with
-            | CMD.Now(shutdown)  -> dispatch shutdown
-            | CMD.Next(override) -> loop (tick+1) (Some override)
-            ) 
-        | None -> return x
+      ( match cmd, msg with
+      
+      (* no testing command present, regular kernel behaviour *)
+      | None, None      ->  return true
+      | None, Some msg  ->  
+        ack' client control_shutdown >>= fun () ->
+        ( match msg with
+        | "suspend"     ->  suspend ()
+        | "poweroff"    ->  poweroff ()
+        | "reboot"      ->  reboot ()
+        | "halt"        ->  halt ()
+        | "crash"       ->  crash ()
+        |  x            ->  log c "unknown shutdown reason %s" x 
+                            >>= fun () -> return true
+        ) 
+      
+      (* we have a command to execute and to remove it for the
+       * next iteration of the loop *)
+      | Some(CMD.Now(action)), _           -> 
+          dispatch action >>= fun _ -> loop (tick+1) None
+      | Some(CMD.OnShutdown(a, action)), Some _ ->
+          ack client control_shutdown a >>= fun () ->
+          dispatch action >>= fun _ -> loop (tick+1) None
+      | Some(CMD.OnShutdown(_, _)), None ->
+          return true (* not yet - wait for shutdown message *)
+      ) >>= fun x ->
+      
+      (* read command, ack it, and store it for execution *)    
+      read_cmd c client control_testing >>= 
+        ( function
+        | Some cmd  -> loop (tick+1) (Some cmd)
+        | None      -> return x
         ) >>= fun _ ->
-      (* just some reporting *)
+
+      (* report the current state *)
       sleep 1.0 >>= fun x ->
       read client "domid" >>= fun domid ->
       log c "domain %s tick %d" domid tick >>= fun () -> 
-      ( match override with
-      | Some cmd -> log c "override %s is active" 
-                      (CMD.String.shutdown cmd) >>= fun _ -> return x 
+      ( match cmd with
+      | Some _   -> log c "command is active" >>= fun _ -> return x
       | None     -> return x
       ) >>= fun _ ->
-      loop (tick+1) override
+      
+      (* loop *)
+      loop (tick+1) cmd
     in 
     loop 0 None
 end
