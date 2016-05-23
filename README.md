@@ -5,16 +5,17 @@
 # Xen Test VM
 
 This repository contains OCaml code to build a minimal para-virtualised
-kernel to run on the Xen hypervisor for testing Xen. The kernel is built
+kernel to run on the Xen hypervisor for testing Xen Server. The kernel is built
 using the Mirage unikernel framework.
 
 # Binary Releases
 
 Binary releases are hosted on
 [GitHub](https://github.com/xapi-project/xen-test-vm/releases) as
-`xen-test.vm.gz`. 
+`xen-test.vm.gz`. (Please check the correct version for the latest
+binary release.)
 
-    VERSION="0.0.5"
+    VERSION="0.1.5"
     GH="https://github.com/xapi-project"
     VM="$GH/xen-test-vm/releases/download/$VERSION/test-vm.xen.gz"
     KERNEL="xen-test-vm-${VERSION//./-}.xen.gz"
@@ -108,8 +109,8 @@ describes three aspects:
     * `"delete"`: delete "control/shutdown"
     * `"something"`: write the string read to "control/shutdown"
 
-3. `"action"`: what do do (eiter now or on shutdown). The message in
-   `control/shutdown` is ignored and superseeded by the `action` field: 
+3. `"action"`: what do do (either now or on shutdown). The message in
+   `control/shutdown` is ignored and superseded by the `action` field: 
     * `"suspend"`: suspend
     * `"poweroff"`: power off
     * `"reboot"`: reboot
