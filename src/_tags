@@ -1,6 +1,7 @@
 true:	        package(functoria.runtime)
 true:	        package(mirage-bootvar)
 true:	        package(mirage-console.xen)
+true:	        package(yojson)
 
 # true:	        package(mirage-types.lwt)
 # true:	        package(mirage-xen)

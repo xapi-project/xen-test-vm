@@ -1,30 +1,30 @@
-# vim:ft=make ts=8: 
-#
+# vim: set ft=make ts=8: 
 #
 
-
-HOST 		= "root@dt87"
+PACKAGE = 	xen-test-vm
+PREFIX = 	.
+LIB = 		$(PREFIX)/$(PACKAGE)/lib
+VM = 		src/test-vm.xen.gz
 
 all:		src
 		$(MAKE) -C src/ all
-		ls -lh src/test-vm.xen.gz
+		ls -lh $(VM)
 
-		
-install: 	all
-		ssh $(HOST) "test -d /boot/guest || mkdir /boot/guest"
-		ssh $(HOST) "cd /boot/guest; rm -f test-vm.xen"
-		scp src/test-vm.xen.gz $(HOST):/boot/guest
+package: 	src
+		opam pin add -y xen-test-vm .
+		opam install xen-test-vm
+
+install: 	
+		mkdir -p $(LIB)
+		cp $(VM) $(LIB)
 
 remove: 	
-		true
-
+		rm -f $(LIB)/$(VM)
+		
 clean:
 		$(MAKE) -C src clean
 
-release: 	opam descr
-
-
-.PHONY: all clean install release
+.PHONY: 	all clean install release
 
 
 
