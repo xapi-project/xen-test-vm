@@ -7,7 +7,7 @@ services:
 before_install:
 - docker build -t ring3/ocaml .
 - docker images
-- rvm use ruby-2.2.3
+  # - rvm use ruby-2.2.3
 script:
 - chmod -R o+w src/
 - docker run -t -t -v $PWD:/mnt ring3/ocaml make -C /mnt
