@@ -1,4 +1,3 @@
-
 exception Error of string
 
 (** actions a guest can take *)
@@ -22,9 +21,6 @@ type t =
   | Now           of action
   | OnShutdown    of ack * action
 
-
 (** [from_string str] reads a JSON object [str] and returns a [t]
-  * value that represens it *)
+    value that represents it *)
 val from_string: string -> t  (* Error *)
-
-
