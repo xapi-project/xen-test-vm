@@ -9,7 +9,7 @@
  * http://mirage.github.io/xenstore/#Xs_protocol
  *)
 
-module Main (Console : Mirage_console.S) (Time : Mirage_time.S) = struct
+module Main (Time : Mirage_time.S) = struct
   module CMD = Commands
   module XS = Xen_os.Xs
 
@@ -68,23 +68,23 @@ module Main (Console : Mirage_console.S) (Time : Mirage_time.S) = struct
 
   let suspend () =
     Logs.info (fun m -> m "%s!" __FUNCTION__);
-    return true
+    return ()
 
   let poweroff () =
     Logs.info (fun m -> m "%s!" __FUNCTION__);
-    return true
+    return ()
 
   let reboot () =
     Logs.info (fun m -> m "%s!" __FUNCTION__);
-    return true
+    return ()
 
   let halt () =
     Logs.info (fun m -> m "%s!" __FUNCTION__);
-    return true
+    return ()
 
   let crash () =
     Logs.info (fun m -> m "%s!" __FUNCTION__);
-    return true
+    return ()
 
   (** [dispatch] implements the reaction to control messages *)
   let dispatch = function
@@ -93,7 +93,7 @@ module Main (Console : Mirage_console.S) (Time : Mirage_time.S) = struct
     | CMD.Reboot -> reboot ()
     | CMD.Halt -> halt ()
     | CMD.Crash -> crash ()
-    | CMD.Ignore -> return false
+    | CMD.Ignore -> return ()
 
   let cmd_of_msg = function
     | "suspend" -> CMD.Suspend
@@ -104,14 +104,14 @@ module Main (Console : Mirage_console.S) (Time : Mirage_time.S) = struct
     | _ -> CMD.Ignore
 
   (* event loop *)
-  let start _console _time =
+  let start _time =
     let* client = XS.make () in
     let rec loop tick cmd =
       let* msg = read_path client control_shutdown in
       let* x =
         match (cmd, msg) with
         (* no testing command present, regular kernel behaviour *)
-        | None, None -> return true
+        | None, None -> return ()
         | None, Some msg ->
             let* () = ack client control_shutdown CMD.AckOK in
             cmd_of_msg msg |> dispatch
@@ -125,7 +125,7 @@ module Main (Console : Mirage_console.S) (Time : Mirage_time.S) = struct
             let _ = dispatch action in
             loop (tick + 1) None
         | Some (CMD.OnShutdown (_, _)), None ->
-            return true (* not yet - wait for shutdown message *)
+            return () (* not yet - wait for shutdown message *)
       in
       (* read command, ack it, and store it for execution *)
       let* x =
