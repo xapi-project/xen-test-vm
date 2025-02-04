@@ -7,6 +7,7 @@ LIB = 		$(PREFIX)/$(PACKAGE)/lib
 VM = 		./src/dist/xenserver-test-vm.xen
 
 all:		src
+		(cd src && mirage configure -t xen)
 		$(MAKE) -C src/ all
 		ls -lh $(VM)
 
