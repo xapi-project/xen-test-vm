@@ -9,7 +9,7 @@
  * http://mirage.github.io/xenstore/#Xs_protocol
  *)
 
-module Main (Console : Mirage_console.S) (Time : Mirage_time.S) = struct
+module Main (Time : Mirage_time.S) = struct
   module CMD = Commands
   module XS = Xen_os.Xs
 
@@ -104,7 +104,7 @@ module Main (Console : Mirage_console.S) (Time : Mirage_time.S) = struct
     | _ -> CMD.Ignore
 
   (* event loop *)
-  let start _console _time =
+  let start _time =
     let* client = XS.make () in
     let rec loop tick cmd =
       let* msg = read_path client control_shutdown in
@@ -148,5 +148,6 @@ module Main (Console : Mirage_console.S) (Time : Mirage_time.S) = struct
       (* loop *)
       loop (tick + 1) cmd
     in
-    loop 0 None
+    let* (_: bool) = loop 0 None
+    in return ()
 end
