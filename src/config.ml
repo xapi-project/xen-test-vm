@@ -2,7 +2,7 @@ open Mirage
 
 let suspend =
   let doc = Key.Arg.info ~doc:"suspend" [ "suspend" ] in
-  Key.(create "key" Arg.(opt (some string) None doc))
+  Key.(create "key" Arg.(opt Cmdliner.Arg.(some string) None doc))
 
 let console_handler =
   let packages =
@@ -17,6 +17,6 @@ let console_handler =
       package "xenstore";
     ]
   in
-  foreign ~packages "Unikernel.Main" (console @-> time @-> job)
+  main ~packages "Unikernel.Main" (time @-> job)
 
-let () = register "xenserver-test-vm" [ console_handler $ default_console $ default_time ]
+let () = register "xenserver-test-vm" [ console_handler $ default_time ]

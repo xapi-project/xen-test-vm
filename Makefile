@@ -4,7 +4,7 @@
 PACKAGE = 	xen-test-vm
 PREFIX = 	.
 LIB = 		$(PREFIX)/$(PACKAGE)/lib
-VM = 		src/test-vm.xen.gz
+VM = 		./src/dist/xenserver-test-vm.xen
 
 all:		src
 		$(MAKE) -C src/ all
