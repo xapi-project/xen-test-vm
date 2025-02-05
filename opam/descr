@@ -1,6 +1,0 @@
-xen-test-vm - minimal VM kernel for testing Xen
-
-This code builds a minimal kernel (or VM) that can be run on a Xen
-hypervisor for exercising tests. The behaviour of the kernel can be
-controlled with a JSON record that can be passed to the kernel via the
-XenStore.
