@@ -1,5 +1,6 @@
 <!-- vim: set ts=4 sw=4 et: -->
 
+![Build](https://github.com/xapi-project/xen-test-vm/workflows/CI/badge.svg)
 
 # Xen Test VM
 
