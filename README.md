@@ -1,68 +1,37 @@
 <!-- vim: set ts=4 sw=4 et: -->
 
-[![Build Status](https://travis-ci.org/xapi-project/xen-test-vm.svg?branch=master)](https://travis-ci.org/xapi-project/xen-test-vm)
 
 # Xen Test VM
 
 This repository contains OCaml code to build a minimal para-virtualised
-kernel to run on the Xen hypervisor for testing Xen Server. The kernel is built
-using the Mirage unikernel framework.
+kernel to run on the Xen hypervisor for testing Xen Server. The kernel
+is built using the Mirage unikernel framework.
 
-# Binary Releases
+## Building
 
-Binary releases are hosted on
-[GitHub](https://github.com/xapi-project/xen-test-vm/releases) as
-`xen-test.vm.gz`. (Please check the correct version for the latest
-binary release.)
+This relies on the Mirage framework which generates the build
+environment by installing packages in the local switch. In that regard
+it is different from typical OCaml projects.
 
-    VERSION="0.1.5"
-    GH="https://github.com/xapi-project"
-    VM="$GH/xen-test-vm/releases/download/$VERSION/test-vm.xen.gz"
-    KERNEL="xen-test-vm-${VERSION//./-}.xen.gz"
+```
+$ make
+```
 
-    curl --fail -s -L "$VM" > "$KERNEL"
+This runs `mirage`, installs packages, and compiles the sources. As
+such, this does not work in a sandboxed environment because it relies on
+installing more OCaml packages.
 
 # Installing the VM
 
-The VM is built as `src/test-vm.xen.gz` and available as binary
-release. The file goes into `/boot/guest` on a host:
+Use
 
-    HOST=host
-    ssh root@$HOST "test -d /boot/guest || mkdir /boot/guest"
-    scp test-vm.xen.gz root@$HOST:/boot/guest
+```
+$ ./install.sh host
+```
 
-The kernel needs to be registered with Xen on the host.  As root on
-`$HOST`, do:
-
-    xe vm-create name-label=minion
-    # this echoes a UUID for the new VM named "minion"
-    xe vm-param-set PV-kernel=/boot/guest/test-vm.xen.gz uuid=$UUID
-    
-Once installed, use the CLI on the host to operate the VM or use
-XenCenter.
-
-# Building from Source Code
-
-The easiest way is to let opam manage the installation of dependencies:
-
-    opam pin add -n -y mirage-xen \
-    git://github.com/jonludlam/mirage-platform#reenable-suspend-resume2
-    
-    opam pin add -n -y mirage-bootvar-xen \
-    git://github.com/jonludlam/mirage-bootvar-xen#better-parser
-    
-    opam pin add -n -y minios-xen \
-    git://github.com/jonludlam/mini-os#suspend-resume3
-
-    opam pin add xen-test-vm .
-    opam install -v xen-test-vm
-
-
-# Travis CI
-
-The VM is built on Travis using the [Dockerfile](./Dockerfile) - see the
-[.travis.yml](.travis.yml). Travis also creates the releases hosted on
-[GitHub](https://github.com/xapi-project/xen-test-vm/releases).
+to install the kernel on a XenServer host using ssh root access on
+`host`. See the script for how it uses the `xe` command to register the
+kernel as a VM.
 
 # Out-of-Band Control Messages
 

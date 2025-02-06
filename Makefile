@@ -1,9 +1,5 @@
-# vim: set ft=make ts=8: 
 #
-
-PACKAGE = 	xen-test-vm
-PREFIX = 	.
-VM = 		./src/dist/xenserver-test-vm.xen
+#
 
 all:		src
 		cd src; mirage configure -t xen
@@ -17,11 +13,4 @@ distclean:
 
 .PHONY: 	all clean distclean
 
-
-
-
-
-
-
-
-
+# vim: set ft=make ts=8: 
