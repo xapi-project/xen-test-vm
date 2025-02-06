@@ -50,8 +50,8 @@ module Main (Time : Mirage_time.S) = struct
         return (Some msg))
       (function Xs_protocol.Enoent _ -> return None | ex -> Lwt.fail ex)
 
-  (** [read_cmd] reads a command in JSON format from [path] and
-   * returns it, or [None] when nothing is there *)
+  (** [read_cmd] reads a command in JSON format from [path] and * returns it, or
+      [None] when nothing is there *)
   let read_cmd client path =
     let* msg = read_path client path in
     match msg with
@@ -148,6 +148,6 @@ module Main (Time : Mirage_time.S) = struct
       (* loop *)
       loop (tick + 1) cmd
     in
-    let* (_: bool) = loop 0 None
-    in return ()
+    let* (_ : bool) = loop 0 None in
+    return ()
 end
