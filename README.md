@@ -34,6 +34,14 @@ to install the kernel on a XenServer host using ssh root access on
 `host`. See the script for how it uses the `xe` command to register the
 kernel as a VM.
 
+```
+$ ./install.sh host /path/to/vm.xen
+```
+
+This installs the provided VM on `host`. The default above uses the local
+built.
+
+
 # Out-of-Band Control Messages
 
 In addition to the shutdown messages sent by Xen, the kernel monitors
