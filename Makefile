@@ -1,9 +1,6 @@
 #
 #
 
-# next version to be released using a GitHub release action
-V = 0.2.1
-
 FMT += --inplace
 FMT += --enable-outside-detected-project
 
@@ -27,9 +24,6 @@ $(VM):
 
 package: 	$(VM) README.md
 		zip -j xenserver-test-vm.zip  $(VM) README.md
-
-release: 	package
-		gh release create $(V) --generate-notes xenserver-test-vm.zip
 
 .PHONY: 	all clean distclean
 

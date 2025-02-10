@@ -2,6 +2,10 @@ name: Create release from tag
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - "*.*.*"
+
 
 jobs:
   build:
@@ -24,6 +28,7 @@ jobs:
       - run: opam exec -- make
       - run: opam exec -- make package
       - name: Publish
-        run: opam exec -- make release
+        run: >
+          gh release create ${{ github.ref_name }} --generate-notes xenserver-test-vm.zip
         env:
           GH_TOKEN: ${{ github.token }}
