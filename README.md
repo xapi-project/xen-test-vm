@@ -46,10 +46,7 @@ built.
 The GitHub CI can be used to create a binary release so you don't have
 to run the build locally. For this:
 
-* Edit `Makefile` to increment the version that will be released (and
-  commit the change)
-* Run the GitHub Release workflow by triggering it manually. This will
-  create a ZIP file that contains the kernel for download.
+* Create a tag
 
 ## Out-of-Band Control Messages
 
@@ -113,7 +110,7 @@ To write to `control/testing`, use:
 The _domid_ is logged to the console and can be obtained through the Xen
 API.
 
-# Debugging the VM
+## Debugging the VM
 
 To direct console output of the VM to a file, you can tell the $HOST:
 
