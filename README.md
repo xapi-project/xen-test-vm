@@ -22,7 +22,7 @@ This runs `mirage`, installs packages, and compiles the sources. As
 such, this does not work in a sandboxed environment because it relies on
 installing more OCaml packages.
 
-# Installing the VM
+## Installing the VM
 
 Use
 
@@ -34,13 +34,27 @@ to install the kernel on a XenServer host using ssh root access on
 `host`. See the script for how it uses the `xe` command to register the
 kernel as a VM.
 
-# Out-of-Band Control Messages
+```
+$ ./install.sh host /path/to/vm.xen
+```
+
+This installs the provided VM on `host`. The default above uses the local
+built.
+
+## Building and Releasing on GitHub
+
+The GitHub CI can be used to create a binary release so you don't have
+to run the build locally. For this:
+
+* Create a tag
+
+## Out-of-Band Control Messages
 
 In addition to the shutdown messages sent by Xen, the kernel monitors
 the Xen Store for messages. These are used to control the response to
 shutdown messages.
 
-## Shutdown Messages
+### Shutdown Messages
 
 The kernel responds to these messages in "control/shutdown". Usually
 the hypervisor only sends these.
@@ -53,7 +67,7 @@ the hypervisor only sends these.
 
 All other messages are logged and ignored. 
 
-## Testing Messages
+### Testing Messages
 
 The kernel reads messages in "control/testing". It acknowledges a
 message by replacing the read message with the empty string.
@@ -96,7 +110,7 @@ To write to `control/testing`, use:
 The _domid_ is logged to the console and can be obtained through the Xen
 API.
 
-# Debugging the VM
+## Debugging the VM
 
 To direct console output of the VM to a file, you can tell the $HOST:
 
