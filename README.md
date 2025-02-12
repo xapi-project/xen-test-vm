@@ -67,6 +67,10 @@ the hypervisor only sends these.
 
 All other messages are logged and ignored. 
 
+Caveat: the VM currently does not properly respond to these messages. We
+lost the implementation over upgrades required for Mirage. So the only
+sensible actions are starting the VM and shutting it down forcefully.
+
 ### Testing Messages
 
 The kernel reads messages in "control/testing". It acknowledges a
